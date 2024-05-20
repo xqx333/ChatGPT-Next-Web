@@ -97,10 +97,10 @@ export class ClientApi {
   constructor(provider: ModelProvider = ModelProvider.GPT) {
     switch (provider) {
       case ModelProvider.GeminiPro:
-        this.llm = new GeminiProApi();
+        this.llm = new ChatGPTApi();
         break;
       case ModelProvider.Claude:
-        this.llm = new ClaudeApi();
+        this.llm = new ChatGPTApi();
         break;
       default:
         this.llm = new ChatGPTApi();
@@ -163,11 +163,7 @@ export function getHeaders() {
   const isGoogle = modelConfig.model.startsWith("gemini");
   const isAzure = accessStore.provider === ServiceProvider.Azure;
   const authHeader = isAzure ? "api-key" : "Authorization";
-  const apiKey = isGoogle
-    ? accessStore.googleApiKey
-    : isAzure
-    ? accessStore.azureApiKey
-    : accessStore.openaiApiKey;
+  const apiKey = accessStore.openaiApiKey;
   const clientConfig = getClientConfig();
   const makeBearer = (s: string) => `${isAzure ? "" : "Bearer "}${s.trim()}`;
   const validString = (x: string) => x && x.length > 0;
