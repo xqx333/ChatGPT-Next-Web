@@ -173,9 +173,9 @@ export function useLoadData() {
 
   var api: ClientApi;
   if (config.modelConfig.model.startsWith("gemini")) {
-    api = new ClientApi(ModelProvider.GeminiPro);
+    api = new ClientApi(ModelProvider.GPT);
   } else if (identifyDefaultClaudeModel(config.modelConfig.model)) {
-    api = new ClientApi(ModelProvider.Claude);
+    api = new ClientApi(ModelProvider.GPT);
   } else {
     api = new ClientApi(ModelProvider.GPT);
   }
