@@ -299,7 +299,7 @@ export const DEFAULT_MODELS = [
       providerType: "openai",
     },
   })),
-  ...openaiModels.map((name) => ({
+  ...bytedanceModels.map((name) => ({
     name,
     available: true,
     provider: {
