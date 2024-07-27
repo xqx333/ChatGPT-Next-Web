@@ -238,10 +238,7 @@ const openaiModels = [
   "gpt-4-turbo-2024-04-09",
   "gpt-4-1106-preview",
   "gemini-1.0-pro",
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-flash-latest",
   "gemini-pro-vision",
-  "claude-instant-1.2",
   "claude-2.0",
   "claude-2.1",
   "claude-3-sonnet-20240229",
@@ -251,11 +248,12 @@ const openaiModels = [
 ];
 
 const googleModels = [
-  
+    "gemini-1.5-pro-latest",
+  "gemini-1.5-flash-latest",
 ];
 
 const anthropicModels = [
-
+  "claude-instant-1.2",
 ];
 
 const baiduModels = [
