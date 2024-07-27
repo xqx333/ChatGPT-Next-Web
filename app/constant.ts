@@ -96,7 +96,7 @@ export enum ServiceProvider {
   OpenAI = "OpenAI",
   Azure = "Azure",
   Google = "Google",
-  Anthropic = "OpenAI",
+  Anthropic = "Anthropic",
   Baidu = "Baidu",
   ByteDance = "ByteDance",
   Alibaba = "Alibaba",
