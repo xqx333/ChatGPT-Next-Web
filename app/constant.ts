@@ -271,6 +271,7 @@ export const DEFAULT_TTS_VOICES = [
 ];
 
 const openaiModels = [ 
+"deepseek-r1", "deepseek-v3",
   "advanced-voice", "chatgpt-4o-latest", 
   "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-all", "claude-3-haiku-20240307", "claude-3-opus-20240229", "claude-3-sonnet-20240229", 
   "cogvideox", "cogvideox-result", "dalle-3", "dall-e-3", "flux", 
