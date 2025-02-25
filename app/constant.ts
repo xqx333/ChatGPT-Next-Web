@@ -273,7 +273,7 @@ export const DEFAULT_TTS_VOICES = [
 const openaiModels = [ 
 "deepseek-r1", "deepseek-v3",
   "advanced-voice", "chatgpt-4o-latest", 
-  "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-all", "claude-3-haiku-20240307", "claude-3-opus-20240229", "claude-3-sonnet-20240229", 
+  "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-all", "claude-3-haiku-20240307", "claude-3-opus-20240229", "claude-3-sonnet-20240229","claude-3-7-sonnet-20250219","claude-3-7-sonnet-thinking",
   "cogvideox", "cogvideox-result", "dalle-3", "dall-e-3", "flux", 
   "gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-2.0-flash-thinking-exp-1219",
   "glm-4-flash", 
