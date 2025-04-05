@@ -474,7 +474,7 @@ const openaiModels = [
   "advanced-voice", "chatgpt-4o-latest", 
   "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-all", "claude-3-haiku-20240307", "claude-3-opus-20240229", "claude-3-sonnet-20240229","claude-3-7-sonnet-20250219","claude-3-7-sonnet-thinking","claude-3-7-sonnet-thinking","claude-3-7-sonnet-20250219-thinking",
   "cogvideox", "cogvideox-result", "dalle-3", "dall-e-3", "flux", 
-  "gemini-1.5-flash-latest", "gemini-1.5-pro-latest","gemini-2.0-flash","gemini-2.0-flash-exp","gemini-2.0-flash-thinking-exp-1219","gemini-2.0-flash-lite-preview-02-05","gemini-2.0-pro-exp-02-05","gemini-2.0-flash-exp-image-generation","gemini-2.5-pro-exp-03-25",gemini-2.5-pro-preview-03-25,
+  "gemini-1.5-flash-latest", "gemini-1.5-pro-latest","gemini-2.0-flash","gemini-2.0-flash-exp","gemini-2.0-flash-thinking-exp-1219","gemini-2.0-flash-lite-preview-02-05","gemini-2.0-pro-exp-02-05","gemini-2.0-flash-exp-image-generation","gemini-2.5-pro-exp-03-25","gemini-2.5-pro-preview-03-25",
   "glm-4-flash", 
   "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", 
   "gpt-4", "gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4-32k", "gpt-4-all", "gpt-4-turbo", "gpt-4-turbo-2024-04-09", "gpt-4-turbo-preview", "gpt-4-vision-preview", 
