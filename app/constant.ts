@@ -478,7 +478,7 @@ const openaiModels = [
   "glm-4-flash", 
   "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", 
   "gpt-4", "gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4-32k", "gpt-4-all", "gpt-4-turbo", "gpt-4-turbo-2024-04-09", "gpt-4-turbo-preview", "gpt-4-vision-preview", 
-  "gpt-4o", "gpt-4o-2024-05-13", "gpt-4o-2024-08-06", "gpt-4o-2024-11-20", "gpt-4o-all","gpt-4o-mini", 
+  "gpt-4o", "gpt-4o-2024-05-13", "gpt-4o-2024-08-06", "gpt-4o-2024-11-20", "gpt-4o-all","gpt-4o-mini", "gpt-4o-image",
   "o1-mini", "o1-mini-all", "o1-preview", "o1-preview-all","o1","o1-all","o1-pro-all","o3-mini","o3-mini-all","o3-mini-high-all",
   "grok-beta", "grok-vision-beta", "grok-2-vision-1212", "grok-2-1212","grok-3","grok-3-deepsearch","grok-3-reasoner","grok-3-deepersearch",
   "luma-extend", "luma-task", "luma-video", "luma-vip-extend", "luma-vip-task", "luma-vip-video", 
