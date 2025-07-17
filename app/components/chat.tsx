@@ -1541,8 +1541,8 @@ function _Chat() {
             );
             const imagesLength = images.length;
 
-            if (imagesLength > 3) {
-              images.splice(3, imagesLength - 3);
+            if (imagesLength > 6) {
+              images.splice(6, imagesLength - 6);
             }
             setAttachImages(images);
           }
@@ -1573,7 +1573,7 @@ function _Chat() {
               .then((dataUrl) => {
                 imagesData.push(dataUrl);
                 if (
-                  imagesData.length === 3 ||
+                  imagesData.length === 6 ||
                   imagesData.length === files.length
                 ) {
                   setUploading(false);
@@ -1591,8 +1591,8 @@ function _Chat() {
     );
 
     const imagesLength = images.length;
-    if (imagesLength > 3) {
-      images.splice(3, imagesLength - 3);
+    if (imagesLength > 6) {
+      images.splice(6, imagesLength - 6);
     }
     setAttachImages(images);
   }
