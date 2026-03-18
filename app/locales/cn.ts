@@ -1,4 +1,4 @@
-import { getClientConfig } from "../config/client";
+﻿import { getClientConfig } from "../config/client";
 import { SubmitKey } from "../store/config";
 import { SAAS_CHAT_UTM_URL } from "@/app/constant";
 
@@ -328,8 +328,8 @@ const cn = {
         SubTitle: "是否使用自定义 Azure 或 OpenAI 服务",
       },
       Provider: {
-        Title: "模型服务商",
-        SubTitle: "切换不同的服务商",
+        Title: "请求方式",
+        SubTitle: "切换不同的请求格式",
       },
       OpenAI: {
         ApiKey: {

@@ -132,6 +132,55 @@ export enum ServiceProvider {
   SiliconFlow = "SiliconFlow",
 }
 
+export enum RequestFormat {
+  OpenAIChat = "openai-chat",
+  Gemini = "gemini",
+  Anthropic = "anthropic",
+  OpenAIResponses = "openai-responses",
+}
+
+export const REQUEST_FORMAT_LABELS: Record<RequestFormat, string> = {
+  [RequestFormat.OpenAIChat]: "OpenAI Chat",
+  [RequestFormat.Gemini]: "Gemini",
+  [RequestFormat.Anthropic]: "Anthropic",
+  [RequestFormat.OpenAIResponses]: "OpenAI Responses",
+};
+
+export const REQUEST_FORMAT_OPTIONS = [
+  RequestFormat.OpenAIChat,
+  RequestFormat.Gemini,
+  RequestFormat.Anthropic,
+  RequestFormat.OpenAIResponses,
+] as const;
+
+export function getServiceProviderForRequestFormat(
+  requestFormat: RequestFormat,
+): ServiceProvider {
+  switch (requestFormat) {
+    case RequestFormat.Gemini:
+      return ServiceProvider.Google;
+    case RequestFormat.Anthropic:
+      return ServiceProvider.Anthropic;
+    case RequestFormat.OpenAIResponses:
+    case RequestFormat.OpenAIChat:
+    default:
+      return ServiceProvider.OpenAI;
+  }
+}
+
+export function getRequestFormatForServiceProvider(
+  provider?: ServiceProvider | string,
+): RequestFormat {
+  switch (provider) {
+    case ServiceProvider.Google:
+      return RequestFormat.Gemini;
+    case ServiceProvider.Anthropic:
+      return RequestFormat.Anthropic;
+    default:
+      return RequestFormat.OpenAIChat;
+  }
+}
+
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
 // BLOCK_NONE will not block any content, and BLOCK_ONLY_HIGH will block only high-risk content.
 export enum GoogleSafetySettingsThreshold {
@@ -172,6 +221,7 @@ export const Anthropic = {
 
 export const OpenaiPath = {
   ChatPath: "v1/chat/completions",
+  ResponsesPath: "v1/responses",
   SpeechPath: "v1/audio/speech",
   ImagePath: "v1/images/generations",
   UsagePath: "dashboard/billing/usage",

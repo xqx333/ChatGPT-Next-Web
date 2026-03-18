@@ -2,6 +2,7 @@ import { getClientConfig } from "../config/client";
 import {
   ACCESS_CODE_PREFIX,
   ModelProvider,
+  RequestFormat,
   ServiceProvider,
 } from "../constant";
 import {
@@ -24,6 +25,7 @@ import { DeepSeekApi } from "./platforms/deepseek";
 import { XAIApi } from "./platforms/xai";
 import { ChatGLMApi } from "./platforms/glm";
 import { SiliconflowApi } from "./platforms/siliconflow";
+import { OpenAIResponsesApi } from "./platforms/openai-responses";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -53,6 +55,7 @@ export interface RequestMessage {
 export interface LLMConfig {
   model: string;
   providerName?: string;
+  requestFormat?: RequestFormat;
   temperature?: number;
   top_p?: number;
   stream?: boolean;
@@ -135,7 +138,15 @@ interface ChatProvider {
 export class ClientApi {
   public llm: LLMApi;
 
-  constructor(provider: ModelProvider = ModelProvider.GPT) {
+  constructor(
+    provider: ModelProvider = ModelProvider.GPT,
+    requestFormat: RequestFormat = RequestFormat.OpenAIChat,
+  ) {
+    if (requestFormat === RequestFormat.OpenAIResponses) {
+      this.llm = new OpenAIResponsesApi();
+      return;
+    }
+
     switch (provider) {
       case ModelProvider.GeminiPro:
         this.llm = new GeminiProApi();
@@ -356,33 +367,36 @@ export function getHeaders(ignoreHeaders: boolean = false) {
   return headers;
 }
 
-export function getClientApi(provider: ServiceProvider): ClientApi {
+export function getClientApi(
+  provider: ServiceProvider,
+  requestFormat: RequestFormat = RequestFormat.OpenAIChat,
+): ClientApi {
   switch (provider) {
     case ServiceProvider.Google:
-      return new ClientApi(ModelProvider.GeminiPro);
+      return new ClientApi(ModelProvider.GeminiPro, requestFormat);
     case ServiceProvider.Anthropic:
-      return new ClientApi(ModelProvider.Claude);
+      return new ClientApi(ModelProvider.Claude, requestFormat);
     case ServiceProvider.Baidu:
-      return new ClientApi(ModelProvider.Ernie);
+      return new ClientApi(ModelProvider.Ernie, requestFormat);
     case ServiceProvider.ByteDance:
-      return new ClientApi(ModelProvider.Doubao);
+      return new ClientApi(ModelProvider.Doubao, requestFormat);
     case ServiceProvider.Alibaba:
-      return new ClientApi(ModelProvider.Qwen);
+      return new ClientApi(ModelProvider.Qwen, requestFormat);
     case ServiceProvider.Tencent:
-      return new ClientApi(ModelProvider.Hunyuan);
+      return new ClientApi(ModelProvider.Hunyuan, requestFormat);
     case ServiceProvider.Moonshot:
-      return new ClientApi(ModelProvider.Moonshot);
+      return new ClientApi(ModelProvider.Moonshot, requestFormat);
     case ServiceProvider.Iflytek:
-      return new ClientApi(ModelProvider.Iflytek);
+      return new ClientApi(ModelProvider.Iflytek, requestFormat);
     case ServiceProvider.DeepSeek:
-      return new ClientApi(ModelProvider.DeepSeek);
+      return new ClientApi(ModelProvider.DeepSeek, requestFormat);
     case ServiceProvider.XAI:
-      return new ClientApi(ModelProvider.XAI);
+      return new ClientApi(ModelProvider.XAI, requestFormat);
     case ServiceProvider.ChatGLM:
-      return new ClientApi(ModelProvider.ChatGLM);
+      return new ClientApi(ModelProvider.ChatGLM, requestFormat);
     case ServiceProvider.SiliconFlow:
-      return new ClientApi(ModelProvider.SiliconFlow);
+      return new ClientApi(ModelProvider.SiliconFlow, requestFormat);
     default:
-      return new ClientApi(ModelProvider.GPT);
+      return new ClientApi(ModelProvider.GPT, requestFormat);
   }
 }

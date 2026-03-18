@@ -17,13 +17,14 @@ import { ChatControllerPool } from "../client/controller";
 import { showToast } from "../components/ui-lib";
 import {
   DEFAULT_INPUT_TEMPLATE,
-  DEFAULT_MODELS,
   DEFAULT_SYSTEM_TEMPLATE,
   GEMINI_SUMMARIZE_MODEL,
-  DEEPSEEK_SUMMARIZE_MODEL,
+  getRequestFormatForServiceProvider,
+  getServiceProviderForRequestFormat,
   KnowledgeCutOffDate,
   MCP_SYSTEM_TEMPLATE,
   MCP_TOOLS_TEMPLATE,
+  RequestFormat,
   ServiceProvider,
   StoreKey,
   SUMMARIZE_MODEL,
@@ -122,9 +123,18 @@ function createEmptySession(): ChatSession {
 function getSummarizeModel(
   currentModel: string,
   providerName: string,
+  requestFormat: RequestFormat,
 ): string[] {
   // if it is using gpt-* models, force to use 4o-mini to summarize
-  if (currentModel.startsWith("gpt") || currentModel.startsWith("chatgpt")) {
+  if (
+    (requestFormat === RequestFormat.OpenAIChat ||
+      requestFormat === RequestFormat.OpenAIResponses) &&
+    (currentModel.startsWith("gpt") ||
+      currentModel.startsWith("chatgpt") ||
+      currentModel.startsWith("o1") ||
+      currentModel.startsWith("o3") ||
+      currentModel.startsWith("o4-mini"))
+  ) {
     const configStore = useAppConfig.getState();
     const accessStore = useAccessStore.getState();
     const allModel = collectModelsWithDefaultModel(
@@ -138,14 +148,12 @@ function getSummarizeModel(
     if (summarizeModel) {
       return [
         summarizeModel.name,
-        summarizeModel.provider?.providerName as string,
+        ServiceProvider.OpenAI,
       ];
     }
   }
-  if (currentModel.startsWith("gemini")) {
+  if (requestFormat === RequestFormat.Gemini) {
     return [GEMINI_SUMMARIZE_MODEL, ServiceProvider.Google];
-  } else if (currentModel.startsWith("deepseek-")) {
-    return [DEEPSEEK_SUMMARIZE_MODEL, ServiceProvider.DeepSeek];
   }
 
   return [currentModel, providerName];
@@ -161,16 +169,9 @@ function countMessages(msgs: ChatMessage[]) {
 function fillTemplateWith(input: string, modelConfig: ModelConfig) {
   const cutoff =
     KnowledgeCutOffDate[modelConfig.model] ?? KnowledgeCutOffDate.default;
-  // Find the model in the DEFAULT_MODELS array that matches the modelConfig.model
-  const modelInfo = DEFAULT_MODELS.find((m) => m.name === modelConfig.model);
-
-  var serviceProvider = "OpenAI";
-  if (modelInfo) {
-    // TODO: auto detect the providerName from the modelConfig.model
-
-    // Directly use the providerName from the modelInfo
-    serviceProvider = modelInfo.provider.providerName;
-  }
+  const serviceProvider =
+    modelConfig.providerName ||
+    getServiceProviderForRequestFormat(modelConfig.requestFormat);
 
   const vars = {
     ServiceProvider: serviceProvider,
@@ -456,7 +457,10 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
-        const api: ClientApi = getClientApi(modelConfig.providerName);
+        const api: ClientApi = getClientApi(
+          modelConfig.providerName,
+          modelConfig.requestFormat,
+        );
         // make request
         api.llm.chat({
           messages: sendMessages,
@@ -676,8 +680,12 @@ export const useChatStore = createPersistStore(
           : getSummarizeModel(
               session.mask.modelConfig.model,
               session.mask.modelConfig.providerName,
+              session.mask.modelConfig.requestFormat,
             );
-        const api: ClientApi = getClientApi(providerName as ServiceProvider);
+        const api: ClientApi = getClientApi(
+          providerName as ServiceProvider,
+          session.mask.modelConfig.requestFormat,
+        );
 
         // remove error messages if any
         const messages = session.messages;
@@ -711,6 +719,7 @@ export const useChatStore = createPersistStore(
               model,
               stream: false,
               providerName,
+              requestFormat: session.mask.modelConfig.requestFormat,
             },
             onFinish(message, responseRes) {
               if (responseRes?.status === 200) {
@@ -776,6 +785,7 @@ export const useChatStore = createPersistStore(
               stream: true,
               model,
               providerName,
+              requestFormat: session.mask.modelConfig.requestFormat,
             },
             onUpdate(message) {
               session.memoryPrompt = message;
@@ -860,7 +870,7 @@ export const useChatStore = createPersistStore(
   },
   {
     name: StoreKey.Chat,
-    version: 3.3,
+    version: 3.4,
     migrate(persistedState, version) {
       const state = persistedState as any;
       const newState = JSON.parse(
@@ -924,6 +934,18 @@ export const useChatStore = createPersistStore(
           s.mask.modelConfig.compressProviderName = "";
         });
       }
+
+      newState.sessions.forEach((session) => {
+        if (!session.mask.modelConfig.requestFormat) {
+          session.mask.modelConfig.requestFormat =
+            getRequestFormatForServiceProvider(
+              session.mask.modelConfig.providerName,
+            );
+        }
+        session.mask.modelConfig.providerName = getServiceProviderForRequestFormat(
+          session.mask.modelConfig.requestFormat,
+        );
+      });
 
       return newState as any;
     },

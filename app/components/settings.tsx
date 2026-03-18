@@ -62,8 +62,12 @@ import {
   XAI,
   Google,
   GoogleSafetySettingsThreshold,
+  getServiceProviderForRequestFormat,
   OPENAI_BASE_URL,
   Path,
+  RequestFormat,
+  REQUEST_FORMAT_LABELS,
+  REQUEST_FORMAT_OPTIONS,
   RELEASE_URL,
   STORAGE_KEY,
   ServiceProvider,
@@ -1790,18 +1794,23 @@ export function Settings() {
                   >
                     <Select
                       aria-label={Locale.Settings.Access.Provider.Title}
-                      value={accessStore.provider}
+                      value={accessStore.requestFormat}
                       onChange={(e) => {
+                        const requestFormat = e.target.value as RequestFormat;
                         accessStore.update(
-                          (access) =>
-                            (access.provider = e.target
-                              .value as ServiceProvider),
+                          (access) => {
+                            access.requestFormat = requestFormat;
+                            access.provider =
+                              getServiceProviderForRequestFormat(
+                                requestFormat,
+                              ) as ServiceProvider;
+                          },
                         );
                       }}
                     >
-                      {Object.entries(ServiceProvider).map(([k, v]) => (
-                        <option value={v} key={k}>
-                          {k}
+                      {REQUEST_FORMAT_OPTIONS.map((requestFormat) => (
+                        <option value={requestFormat} key={requestFormat}>
+                          {REQUEST_FORMAT_LABELS[requestFormat]}
                         </option>
                       ))}
                     </Select>

@@ -11,6 +11,9 @@ import {
   DEFAULT_TTS_MODELS,
   DEFAULT_TTS_VOICE,
   DEFAULT_TTS_VOICES,
+  getRequestFormatForServiceProvider,
+  getServiceProviderForRequestFormat,
+  RequestFormat,
   StoreKey,
   ServiceProvider,
 } from "../constant";
@@ -65,7 +68,10 @@ export const DEFAULT_CONFIG = {
 
   modelConfig: {
     model: "gpt-4o-mini" as ModelType,
-    providerName: "OpenAI" as ServiceProvider,
+    providerName: getServiceProviderForRequestFormat(
+      RequestFormat.OpenAIChat,
+    ) as ServiceProvider,
+    requestFormat: RequestFormat.OpenAIChat,
     temperature: 0.5,
     top_p: 1,
     max_tokens: 4000,
@@ -195,7 +201,7 @@ export const useAppConfig = createPersistStore(
   }),
   {
     name: StoreKey.Config,
-    version: 4.1,
+    version: 4.2,
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
@@ -213,6 +219,15 @@ export const useAppConfig = createPersistStore(
 
     migrate(persistedState, version) {
       const state = persistedState as ChatConfig;
+
+      if (!state.modelConfig.requestFormat) {
+        state.modelConfig.requestFormat = getRequestFormatForServiceProvider(
+          state.modelConfig.providerName,
+        );
+      }
+      state.modelConfig.providerName = getServiceProviderForRequestFormat(
+        state.modelConfig.requestFormat,
+      );
 
       if (version < 3.4) {
         state.modelConfig.sendMemory = true;

@@ -332,8 +332,8 @@ const en: LocaleType = {
         SubTitle: "Use custom Azure or OpenAI service",
       },
       Provider: {
-        Title: "Model Provider",
-        SubTitle: "Select Azure or OpenAI",
+        Title: "Request Format",
+        SubTitle: "Switch between request formats",
       },
       OpenAI: {
         ApiKey: {

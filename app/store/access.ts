@@ -1,6 +1,5 @@
 import {
   GoogleSafetySettingsThreshold,
-  ServiceProvider,
   StoreKey,
   ApiPath,
   OPENAI_BASE_URL,
@@ -16,6 +15,10 @@ import {
   DEEPSEEK_BASE_URL,
   XAI_BASE_URL,
   CHATGLM_BASE_URL,
+  getRequestFormatForServiceProvider,
+  getServiceProviderForRequestFormat,
+  RequestFormat,
+  ServiceProvider,
   SILICONFLOW_BASE_URL,
 } from "../constant";
 import { getHeaders } from "../client/api";
@@ -64,6 +67,7 @@ const DEFAULT_ACCESS_STATE = {
   useCustomConfig: false,
 
   provider: ServiceProvider.OpenAI,
+  requestFormat: RequestFormat.OpenAIChat,
 
   // openai
   openaiUrl: DEFAULT_OPENAI_URL,
@@ -257,8 +261,12 @@ export const useAccessStore = createPersistStore(
           const defaultModel = res.defaultModel ?? "";
           if (defaultModel !== "") {
             const [model, providerName] = getModelProvider(defaultModel);
+            const requestFormat =
+              getRequestFormatForServiceProvider(providerName);
             DEFAULT_CONFIG.modelConfig.model = model;
-            DEFAULT_CONFIG.modelConfig.providerName = providerName as any;
+            DEFAULT_CONFIG.modelConfig.requestFormat = requestFormat;
+            DEFAULT_CONFIG.modelConfig.providerName =
+              providerName || getServiceProviderForRequestFormat(requestFormat);
           }
 
           return res;
@@ -277,7 +285,7 @@ export const useAccessStore = createPersistStore(
   }),
   {
     name: StoreKey.Access,
-    version: 2,
+    version: 3,
     migrate(persistedState, version) {
       if (version < 2) {
         const state = persistedState as {
@@ -289,6 +297,17 @@ export const useAccessStore = createPersistStore(
         state.openaiApiKey = state.token;
         state.azureApiVersion = "2023-08-01-preview";
       }
+
+      const state = persistedState as {
+        requestFormat?: RequestFormat;
+        provider?: string;
+      };
+      if (!state.requestFormat) {
+        state.requestFormat = getRequestFormatForServiceProvider(state.provider);
+      }
+      state.provider = getServiceProviderForRequestFormat(
+        state.requestFormat,
+      ) as string;
 
       return persistedState as any;
     },

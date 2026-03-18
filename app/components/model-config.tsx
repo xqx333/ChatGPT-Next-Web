@@ -1,25 +1,40 @@
-import { ServiceProvider } from "@/app/constant";
+import {
+  getServiceProviderForRequestFormat,
+  RequestFormat,
+  REQUEST_FORMAT_LABELS,
+  REQUEST_FORMAT_OPTIONS,
+  ServiceProvider,
+} from "@/app/constant";
 import { ModalConfigValidator, ModelConfig } from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
 import { ListItem, Select } from "./ui-lib";
 import { useAllModels } from "../utils/hooks";
-import { groupBy } from "lodash-es";
+import { useMemo } from "react";
 import styles from "./model-config.module.scss";
-import { getModelProvider } from "../utils/model";
 
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
   updateConfig: (updater: (config: ModelConfig) => void) => void;
 }) {
   const allModels = useAllModels();
-  const groupModels = groupBy(
-    allModels.filter((v) => v.available),
-    "provider.providerName",
-  );
-  const value = `${props.modelConfig.model}@${props.modelConfig?.providerName}`;
-  const compressModelValue = `${props.modelConfig.compressModel}@${props.modelConfig?.compressProviderName}`;
+  const models = useMemo(() => {
+    const seen = new Set<string>();
+    return allModels.filter((model) => {
+      if (!model.available || /^-+$/.test(model.name)) {
+        return false;
+      }
+      if (seen.has(model.name)) {
+        return false;
+      }
+      seen.add(model.name);
+      return true;
+    });
+  }, [allModels]);
+  const value = props.modelConfig.model;
+  const compressModelValue =
+    props.modelConfig.compressModel || props.modelConfig.model;
 
   return (
     <>
@@ -29,23 +44,39 @@ export function ModelConfigList(props: {
           value={value}
           align="left"
           onChange={(e) => {
-            const [model, providerName] = getModelProvider(
-              e.currentTarget.value,
-            );
             props.updateConfig((config) => {
-              config.model = ModalConfigValidator.model(model);
-              config.providerName = providerName as ServiceProvider;
+              config.model = ModalConfigValidator.model(e.currentTarget.value);
             });
           }}
         >
-          {Object.keys(groupModels).map((providerName, index) => (
-            <optgroup label={providerName} key={index}>
-              {groupModels[providerName].map((v, i) => (
-                <option value={`${v.name}@${v.provider?.providerName}`} key={i}>
-                  {v.displayName}
-                </option>
-              ))}
-            </optgroup>
+          {models.map((model, index) => (
+            <option value={model.name} key={index}>
+              {model.displayName ?? model.name}
+            </option>
+          ))}
+        </Select>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.Provider.Title}
+        subTitle={Locale.Settings.Access.Provider.SubTitle}
+      >
+        <Select
+          aria-label={Locale.Settings.Access.Provider.Title}
+          value={props.modelConfig.requestFormat ?? RequestFormat.OpenAIChat}
+          onChange={(e) => {
+            const requestFormat = e.currentTarget.value as RequestFormat;
+            props.updateConfig((config) => {
+              config.requestFormat = requestFormat;
+              config.providerName =
+                getServiceProviderForRequestFormat(requestFormat);
+              config.compressProviderName = config.providerName;
+            });
+          }}
+        >
+          {REQUEST_FORMAT_OPTIONS.map((requestFormat) => (
+            <option value={requestFormat} key={requestFormat}>
+              {REQUEST_FORMAT_LABELS[requestFormat]}
+            </option>
           ))}
         </Select>
       </ListItem>
@@ -250,22 +281,20 @@ export function ModelConfigList(props: {
           aria-label={Locale.Settings.CompressModel.Title}
           value={compressModelValue}
           onChange={(e) => {
-            const [model, providerName] = getModelProvider(
-              e.currentTarget.value,
-            );
             props.updateConfig((config) => {
-              config.compressModel = ModalConfigValidator.model(model);
-              config.compressProviderName = providerName as ServiceProvider;
+              config.compressModel = ModalConfigValidator.model(
+                e.currentTarget.value,
+              );
+              config.compressProviderName =
+                config.providerName || ServiceProvider.OpenAI;
             });
           }}
         >
-          {allModels
-            .filter((v) => v.available)
-            .map((v, i) => (
-              <option value={`${v.name}@${v.provider?.providerName}`} key={i}>
-                {v.displayName}({v.provider?.providerName})
-              </option>
-            ))}
+          {models.map((model, index) => (
+            <option value={model.name} key={index}>
+              {model.displayName ?? model.name}
+            </option>
+          ))}
         </Select>
       </ListItem>
     </>

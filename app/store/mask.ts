@@ -2,7 +2,11 @@ import { BUILTIN_MASKS } from "../masks";
 import { getLang, Lang } from "../locales";
 import { DEFAULT_TOPIC, ChatMessage } from "./chat";
 import { ModelConfig, useAppConfig } from "./config";
-import { StoreKey } from "../constant";
+import {
+  getRequestFormatForServiceProvider,
+  getServiceProviderForRequestFormat,
+  StoreKey,
+} from "../constant";
 import { nanoid } from "nanoid";
 import { createPersistStore } from "../utils/store";
 
@@ -114,7 +118,7 @@ export const useMaskStore = createPersistStore(
   }),
   {
     name: StoreKey.Mask,
-    version: 3.1,
+    version: 3.2,
 
     migrate(state, version) {
       const newState = JSON.parse(JSON.stringify(state)) as MaskState;
@@ -131,6 +135,17 @@ export const useMaskStore = createPersistStore(
         });
         newState.masks = updatedMasks;
       }
+
+      Object.values(newState.masks).forEach((mask) => {
+        if (!mask.modelConfig.requestFormat) {
+          mask.modelConfig.requestFormat = getRequestFormatForServiceProvider(
+            mask.modelConfig.providerName,
+          );
+        }
+        mask.modelConfig.providerName = getServiceProviderForRequestFormat(
+          mask.modelConfig.requestFormat,
+        );
+      });
 
       return newState as any;
     },
