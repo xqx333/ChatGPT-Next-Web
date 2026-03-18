@@ -126,9 +126,13 @@ export function PreCode(props: { children: any }) {
           codeElement.style.whiteSpace = "pre-wrap";
         }
       });
-      setTimeout(renderArtifacts, 1);
+      const timeoutId = window.setTimeout(() => renderArtifacts(), 1);
+      return () => {
+        window.clearTimeout(timeoutId);
+        renderArtifacts.cancel();
+      };
     }
-  }, []);
+  }, [renderArtifacts]);
 
   return (
     <>

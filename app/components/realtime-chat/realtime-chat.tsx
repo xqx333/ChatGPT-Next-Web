@@ -47,6 +47,7 @@ export function RealtimeChat({
   const clientRef = useRef<RTClient | null>(null);
   const audioHandlerRef = useRef<AudioHandler | null>(null);
   const initRef = useRef(false);
+  const isRecordingRef = useRef(isRecording);
 
   const temperature = config.realtimeConfig.temperature;
   const apiKey = config.realtimeConfig.apiKey;
@@ -258,16 +259,41 @@ export function RealtimeChat({
   };
 
   useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
+  const handleConnectRef = useRef(handleConnect);
+  const toggleRecordingRef = useRef(toggleRecording);
+  const disconnectRef = useRef(disconnect);
+
+  useEffect(() => {
+    handleConnectRef.current = handleConnect;
+  }, [handleConnect]);
+
+  useEffect(() => {
+    toggleRecordingRef.current = toggleRecording;
+  }, [toggleRecording]);
+
+  useEffect(() => {
+    disconnectRef.current = disconnect;
+  }, [disconnect]);
+
+  useEffect(() => {
     // 防止重复初始化
     if (initRef.current) return;
     initRef.current = true;
+    let disposed = false;
 
     const initAudioHandler = async () => {
       const handler = new AudioHandler();
       await handler.initialize();
+      if (disposed) {
+        await handler.close().catch(console.error);
+        return;
+      }
       audioHandlerRef.current = handler;
-      await handleConnect();
-      await toggleRecording();
+      await handleConnectRef.current();
+      await toggleRecordingRef.current();
     };
 
     initAudioHandler().catch((error) => {
@@ -276,11 +302,12 @@ export function RealtimeChat({
     });
 
     return () => {
-      if (isRecording) {
-        toggleRecording();
+      disposed = true;
+      if (isRecordingRef.current) {
+        toggleRecordingRef.current().catch(console.error);
       }
       audioHandlerRef.current?.close().catch(console.error);
-      disconnect();
+      disconnectRef.current().catch(console.error);
     };
   }, []);
 

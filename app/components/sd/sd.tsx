@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import chatStyles from "@/app/components/chat.module.scss";
 import styles from "@/app/components/sd/sd.module.scss";
 import homeStyles from "@/app/components/home.module.scss";
@@ -101,7 +102,7 @@ export function Sd() {
 
   useEffect(() => {
     setSdImages(sdStore.draw);
-  }, [sdStore.currentId]);
+  }, [sdStore.currentId, sdStore.draw]);
 
   return (
     <>

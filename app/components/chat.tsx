@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useDebouncedCallback } from "use-debounce";
 import React, {
   Fragment,
@@ -503,6 +504,7 @@ export function ChatActions(props: {
   setUserInput: (input: string) => void;
   setShowChatSidePanel: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const { setAttachImages, setUploading } = props;
   const config = useAppConfig();
   const navigate = useNavigate();
   const chatStore = useChatStore();
@@ -578,8 +580,8 @@ export function ChatActions(props: {
     const show = isVisionModel(currentModel);
     setShowUploadImage(show);
     if (!show) {
-      props.setAttachImages([]);
-      props.setUploading(false);
+      setAttachImages([]);
+      setUploading(false);
     }
 
     // if current model is not available
@@ -593,7 +595,7 @@ export function ChatActions(props: {
       });
       showToast(nextModel.displayName ?? nextModel.name);
     }
-  }, [chatStore, currentModel, models, session]);
+  }, [chatStore, currentModel, models, session, setAttachImages, setUploading]);
 
   return (
     <div className={styles["chat-input-actions"]}>
@@ -993,16 +995,16 @@ function _Chat() {
           (scrollRef.current.scrollTop + scrollRef.current.clientHeight),
       ) <= 1
     : false;
-  const isAttachWithTop = useMemo(() => {
-    const lastMessage = scrollRef.current?.lastElementChild as HTMLElement;
+  const lastMessage = scrollRef.current?.lastElementChild as HTMLElement | null;
+  const isAttachWithTop = (() => {
     // if scrolllRef is not ready or no message, return false
     if (!scrollRef?.current || !lastMessage) return false;
     const topDistance =
-      lastMessage!.getBoundingClientRect().top -
+      lastMessage.getBoundingClientRect().top -
       scrollRef.current.getBoundingClientRect().top;
     // leave some space for user question
     return topDistance < 100;
-  }, [scrollRef?.current?.scrollHeight]);
+  })();
 
   const isTyping = userInput !== "";
 
