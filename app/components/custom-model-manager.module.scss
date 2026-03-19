@@ -1,0 +1,158 @@
+.custom-model-summary {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.custom-model-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.custom-model-status {
+  font-size: 13px;
+  color: var(--black);
+  opacity: 0.8;
+}
+
+.custom-model-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.custom-model-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.custom-model-chip,
+.custom-model-chip-more,
+.custom-model-empty {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: var(--border-in-light);
+  background-color: var(--white);
+  font-size: 12px;
+}
+
+.custom-model-chip {
+  color: var(--black);
+}
+
+.custom-model-chip-more,
+.custom-model-empty {
+  color: var(--primary);
+}
+
+.manager-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 50vh;
+}
+
+.manager-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.manager-search {
+  min-width: 240px;
+  flex: 1;
+}
+
+.manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.manager-empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--black);
+  opacity: 0.6;
+}
+
+.manager-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: var(--border-in-light);
+  background-color: var(--white);
+  cursor: pointer;
+  transition: all ease 0.2s;
+
+  &:hover {
+    background-color: var(--hover-color);
+  }
+}
+
+.manager-item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.manager-item-content {
+  min-width: 0;
+}
+
+.manager-item-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--black);
+  word-break: break-word;
+}
+
+.manager-item-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.manager-item-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: var(--second);
+  color: var(--primary);
+  font-size: 11px;
+}
+
+@media only screen and (max-width: 600px) {
+  .custom-model-toolbar,
+  .manager-toolbar {
+    align-items: stretch;
+  }
+
+  .manager-search {
+    min-width: 100%;
+  }
+
+  .manager-item {
+    padding: 12px;
+  }
+}

@@ -515,7 +515,35 @@ const en: LocaleType = {
       },
       CustomModel: {
         Title: "Custom Models",
-        SubTitle: "Custom model options, seperated by comma",
+        SubTitle:
+          "Manage visible models visually, and load models from the current endpoint and API key",
+        Status(selected: number, total: number) {
+          return `${selected} / ${total} models enabled`;
+        },
+        Manage: "Manage Models",
+        Load: "Load Models",
+        Loading: "Loading...",
+        Reload: "Reload Models",
+        Empty: "No models selected yet",
+        EmptyRemote: "No models were returned by the endpoint",
+        MissingConfig: "Please fill in the endpoint and API key first",
+        LoadFailed: "Failed to load models",
+        LoadSuccess(count: number) {
+          return `Loaded ${count} models`;
+        },
+        Modal: {
+          Title: "Select Models",
+          SearchPlaceholder: "Search models",
+          SelectAll: "Select All",
+          ClearAll: "Clear All",
+          Empty: "No matching models",
+          CustomOnly: "Manual",
+          Filter: {
+            All: "All",
+            Enabled: "Enabled",
+            Disabled: "Hidden",
+          },
+        },
       },
       Google: {
         ApiKey: {

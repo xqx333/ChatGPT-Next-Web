@@ -531,7 +531,35 @@ const cn = {
       },
       CustomModel: {
         Title: "自定义模型名",
-        SubTitle: "增加自定义模型可选项，使用英文逗号隔开",
+        SubTitle:
+          "显示当前模型并支持可视化增删，也可通过当前接口地址和 API Key 加载模型",
+        Status(selected: number, total: number) {
+          return `已启用 ${selected} / ${total} 个模型`;
+        },
+        Manage: "管理模型",
+        Load: "加载模型列表",
+        Loading: "加载中...",
+        Reload: "重新获取模型",
+        Empty: "当前还没有可用模型",
+        EmptyRemote: "接口没有返回可用模型",
+        MissingConfig: "请先填写接口地址和 API Key",
+        LoadFailed: "加载模型失败",
+        LoadSuccess(count: number) {
+          return `已加载 ${count} 个模型`;
+        },
+        Modal: {
+          Title: "选择模型",
+          SearchPlaceholder: "搜索模型",
+          SelectAll: "全选",
+          ClearAll: "全不选",
+          Empty: "没有匹配的模型",
+          CustomOnly: "手动添加",
+          Filter: {
+            All: "全部",
+            Enabled: "已启用",
+            Disabled: "已隐藏",
+          },
+        },
       },
     },
 

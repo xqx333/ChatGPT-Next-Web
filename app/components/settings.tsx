@@ -89,6 +89,7 @@ import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
 import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
+import { CustomModelManager } from "./custom-model-manager";
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -1925,18 +1926,17 @@ export function Settings() {
             subTitle={Locale.Settings.Access.CustomModel.SubTitle}
             vertical={true}
           >
-            <input
-              aria-label={Locale.Settings.Access.CustomModel.Title}
-              style={{ width: "100%", maxWidth: "unset", textAlign: "left" }}
-              type="text"
-              value={config.customModels}
-              placeholder="model1,model2,model3"
-              onChange={(e) =>
-                config.update(
-                  (config) => (config.customModels = e.currentTarget.value),
-                )
+            <CustomModelManager
+              models={config.models}
+              customModels={config.customModels}
+              defaultModel={accessStore.defaultModel}
+              endpoint={accessStore.openaiUrl}
+              apiKey={accessStore.openaiApiKey}
+              onChangeCustomModels={(customModels) =>
+                config.update((config) => (config.customModels = customModels))
               }
-            ></input>
+              onMergeModels={(models) => config.mergeModels(models)}
+            />
           </ListItem>
         </List>
 
