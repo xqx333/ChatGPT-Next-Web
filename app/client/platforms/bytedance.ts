@@ -1,5 +1,5 @@
 "use client";
-import { ApiPath, ByteDance, BYTEDANCE_BASE_URL } from "@/app/constant";
+import { ByteDance, BYTEDANCE_BASE_URL } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -18,7 +18,6 @@ import {
 } from "../api";
 
 import { streamWithThink } from "@/app/utils/chat";
-import { getClientConfig } from "@/app/config/client";
 import { preProcessImageContent } from "@/app/utils/chat";
 import {
   getMessageTextContentWithoutThinking,
@@ -60,14 +59,13 @@ export class DoubaoApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      baseUrl = isApp ? BYTEDANCE_BASE_URL : ApiPath.ByteDance;
+      baseUrl = BYTEDANCE_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.ByteDance)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

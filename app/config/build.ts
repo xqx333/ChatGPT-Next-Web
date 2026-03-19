@@ -1,4 +1,3 @@
-import tauriConfig from "../../src-tauri/tauri.conf.json";
 import { DEFAULT_INPUT_TEMPLATE } from "../constant";
 
 export const getBuildConfig = () => {
@@ -9,8 +8,11 @@ export const getBuildConfig = () => {
   }
 
   const buildMode = process.env.BUILD_MODE ?? "standalone";
-  const isApp = !!process.env.BUILD_APP;
-  const version = "v" + tauriConfig.package.version;
+  const isApp =
+    process.env.BUILD_APP === "1" || process.env.BUILD_APP === "true";
+  const version = process.env.npm_package_version
+    ? `v${process.env.npm_package_version}`
+    : "dev";
 
   const commitInfo = (() => {
     try {

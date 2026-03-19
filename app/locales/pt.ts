@@ -321,8 +321,7 @@ const pt: PartialLocaleType = {
 
         Endpoint: {
           Title: "Endpoint OpenAI",
-          SubTitle:
-            "Deve começar com http(s):// ou usar /api/openai como padrão",
+          SubTitle: "Deve começar com http(s)://",
         },
       },
       Azure: {

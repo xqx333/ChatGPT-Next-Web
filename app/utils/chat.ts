@@ -10,7 +10,7 @@ import {
   fetchEventSource,
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "./format";
-import { fetch as tauriFetch } from "./stream";
+import { fetch as streamFetch } from "./stream";
 
 export function compressImage(file: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -317,7 +317,7 @@ export function stream(
       REQUEST_TIMEOUT_MS,
     );
     fetchEventSource(chatPath, {
-      fetch: tauriFetch as any,
+      fetch: streamFetch as any,
       ...chatPayload,
       async onopen(res) {
         clearTimeout(requestTimeoutId);
@@ -543,7 +543,7 @@ export function streamWithThink(
       REQUEST_TIMEOUT_MS,
     );
     fetchEventSource(chatPath, {
-      fetch: tauriFetch as any,
+      fetch: streamFetch as any,
       ...chatPayload,
       async onopen(res) {
         clearTimeout(requestTimeoutId);

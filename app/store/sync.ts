@@ -1,5 +1,5 @@
 import { getClientConfig } from "../config/client";
-import { ApiPath, STORAGE_KEY, StoreKey } from "../constant";
+import { STORAGE_KEY, StoreKey } from "../constant";
 import { createPersistStore } from "../utils/store";
 import {
   AppState,
@@ -25,7 +25,7 @@ export type SyncStore = GetStoreState<typeof useSyncStore>;
 const DEFAULT_SYNC_STATE = {
   provider: ProviderType.WebDAV,
   useProxy: true,
-  proxyUrl: ApiPath.Cors as string,
+  proxyUrl: "",
 
   webdav: {
     endpoint: "",

@@ -132,10 +132,6 @@ const cn = {
       Toast: "正在生成截图",
       Modal: "长按或右键保存图片",
     },
-    Artifacts: {
-      Title: "分享页面",
-      Error: "分享失败",
-    },
   },
   Select: {
     Search: "搜索消息",

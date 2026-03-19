@@ -1,6 +1,6 @@
 "use client";
 // azure and openai, using same models. so using same LLMApi.
-import { ApiPath, XAI_BASE_URL, XAI } from "@/app/constant";
+import { XAI_BASE_URL, XAI } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -16,7 +16,6 @@ import {
   LLMModel,
   SpeechOptions,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import { getTimeoutMSByModel } from "@/app/utils";
 import { preProcessImageContent } from "@/app/utils/chat";
 import { RequestPayload } from "./openai";
@@ -35,15 +34,13 @@ export class XAIApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.XAI;
-      baseUrl = isApp ? XAI_BASE_URL : apiPath;
+      baseUrl = XAI_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.XAI)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

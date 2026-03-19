@@ -321,8 +321,7 @@ const sk: PartialLocaleType = {
 
         Endpoint: {
           Title: "Koncový bod OpenAI",
-          SubTitle:
-            "Musí začínať http(s):// alebo použiť /api/openai ako predvolený",
+          SubTitle: "Musí začínať http(s)://",
         },
       },
       Azure: {

@@ -49,29 +49,8 @@ export enum Path {
   Auth = "/auth",
   Sd = "/sd",
   SdNew = "/sd-new",
-  Artifacts = "/artifacts",
   SearchChat = "/search-chat",
   McpMarket = "/mcp-market",
-}
-
-export enum ApiPath {
-  Cors = "",
-  Azure = "/api/azure",
-  OpenAI = "/api/openai",
-  Anthropic = "/api/anthropic",
-  Google = "/api/google",
-  Baidu = "/api/baidu",
-  ByteDance = "/api/bytedance",
-  Alibaba = "/api/alibaba",
-  Tencent = "/api/tencent",
-  Moonshot = "/api/moonshot",
-  Iflytek = "/api/iflytek",
-  Stability = "/api/stability",
-  Artifacts = "/api/artifacts",
-  XAI = "/api/xai",
-  ChatGLM = "/api/chatglm",
-  DeepSeek = "/api/deepseek",
-  SiliconFlow = "/api/siliconflow",
 }
 
 export enum SlotID {
@@ -534,36 +513,122 @@ export const VISION_MODEL_REGEXES = [
 
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
 
-const openaiModels = [ 
-"deepseek-r1", "deepseek-v3","deepseek-v3-0324","deepseek-reasoner","deepseek-chat",
-  "qwq-32b", "qwen3-235b-a22b", 
-  "advanced-voice", "chatgpt-4o-latest", 
-  "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-opus-20240229","claude-3-7-sonnet-20250219","claude-3-7-sonnet-20250219-all","claude-3-7-sonnet-20250219-thinking","claude-3-7-sonnet-20250219-thinking-all","claude-opus-4-20250514","claude-opus-4-20250514-all","claude-opus-4-20250514-thinking","claude-opus-4-20250514-thinking-all","claude-sonnet-4-20250514","claude-sonnet-4-20250514-all","claude-sonnet-4-20250514-thinking","claude-sonnet-4-20250514-thinking-all",
-  "cogvideox", "cogvideox-result", "dalle-3", "dall-e-3", "flux", 
-  "gemini-2.0-flash","gemini-2.0-flash-lite-preview-02-05","gemini-2.5-pro","gemini-2.5-flash","gemini-2.5-pro-thinking","gemini-2.5-flash-thinking","gemini-2.5-flash-nothinking",
-  "glm-4-flash", 
-  "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", 
-  "gpt-4", "gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4-32k", "gpt-4-all", "gpt-4-turbo", "gpt-4-turbo-2024-04-09", "gpt-4-turbo-preview", "gpt-4-vision-preview", "gpt-4.1","gpt-4.1-mini","gpt-4.1-nano",
-  "gpt-4o", "gpt-4o-2024-05-13", "gpt-4o-2024-08-06", "gpt-4o-2024-11-20", "gpt-4o-all","gpt-4o-mini", "gpt-4o-image",
-  "o1-mini", "o1-mini-all", "o1-preview", "o1-preview-all","o1","o1-all","o1-pro-all","o3-mini","o3-mini-all","o3-mini-high-all","o3","o3-all","o4-mini","o4-mini-all","o4-mini-high-all",
-  "grok-beta", "grok-vision-beta", "grok-2-vision-1212", "grok-2-1212","grok-3","grok-3-deepsearch","grok-3-reasoner","grok-3-deepersearch","grok-4",
-  "luma-extend", "luma-task", "luma-video", "luma-vip-extend", "luma-vip-task", "luma-vip-video", 
-  "mj-chat",  "playground-v2.5", "runway-video", 
-  "runway-video-task", "stable-diffusion", "stable-diffusion-3-2b", "suno-v3", "suno-v3.5", "vidu-task-get", 
-  "vidu-video", "vidu-video-stable","sora_image"
-]; 
+const openaiModels = [
+  "deepseek-r1",
+  "deepseek-v3",
+  "deepseek-v3-0324",
+  "deepseek-reasoner",
+  "deepseek-chat",
+  "qwq-32b",
+  "qwen3-235b-a22b",
+  "advanced-voice",
+  "chatgpt-4o-latest",
+  "claude-3-5-sonnet-20240620",
+  "claude-3-5-sonnet-20241022",
+  "claude-3-opus-20240229",
+  "claude-3-7-sonnet-20250219",
+  "claude-3-7-sonnet-20250219-all",
+  "claude-3-7-sonnet-20250219-thinking",
+  "claude-3-7-sonnet-20250219-thinking-all",
+  "claude-opus-4-20250514",
+  "claude-opus-4-20250514-all",
+  "claude-opus-4-20250514-thinking",
+  "claude-opus-4-20250514-thinking-all",
+  "claude-sonnet-4-20250514",
+  "claude-sonnet-4-20250514-all",
+  "claude-sonnet-4-20250514-thinking",
+  "claude-sonnet-4-20250514-thinking-all",
+  "cogvideox",
+  "cogvideox-result",
+  "dalle-3",
+  "dall-e-3",
+  "flux",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite-preview-02-05",
+  "gemini-2.5-pro",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro-thinking",
+  "gemini-2.5-flash-thinking",
+  "gemini-2.5-flash-nothinking",
+  "glm-4-flash",
+  "gpt-3.5-turbo",
+  "gpt-3.5-turbo-0125",
+  "gpt-3.5-turbo-1106",
+  "gpt-3.5-turbo-16k",
+  "gpt-4",
+  "gpt-4-0125-preview",
+  "gpt-4-1106-preview",
+  "gpt-4-32k",
+  "gpt-4-all",
+  "gpt-4-turbo",
+  "gpt-4-turbo-2024-04-09",
+  "gpt-4-turbo-preview",
+  "gpt-4-vision-preview",
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
+  "gpt-4o",
+  "gpt-4o-2024-05-13",
+  "gpt-4o-2024-08-06",
+  "gpt-4o-2024-11-20",
+  "gpt-4o-all",
+  "gpt-4o-mini",
+  "gpt-4o-image",
+  "o1-mini",
+  "o1-mini-all",
+  "o1-preview",
+  "o1-preview-all",
+  "o1",
+  "o1-all",
+  "o1-pro-all",
+  "o3-mini",
+  "o3-mini-all",
+  "o3-mini-high-all",
+  "o3",
+  "o3-all",
+  "o4-mini",
+  "o4-mini-all",
+  "o4-mini-high-all",
+  "grok-beta",
+  "grok-vision-beta",
+  "grok-2-vision-1212",
+  "grok-2-1212",
+  "grok-3",
+  "grok-3-deepsearch",
+  "grok-3-reasoner",
+  "grok-3-deepersearch",
+  "grok-4",
+  "luma-extend",
+  "luma-task",
+  "luma-video",
+  "luma-vip-extend",
+  "luma-vip-task",
+  "luma-vip-video",
+  "mj-chat",
+  "playground-v2.5",
+  "runway-video",
+  "runway-video-task",
+  "stable-diffusion",
+  "stable-diffusion-3-2b",
+  "suno-v3",
+  "suno-v3.5",
+  "vidu-task-get",
+  "vidu-video",
+  "vidu-video-stable",
+  "sora_image",
+];
 
 // 为其他常量保留占位值
-const googleModels = ["-------"]; 
-const anthropicModels = ["-------"]; 
-const baiduModels = ["-------"]; 
-const bytedanceModels = ["-------"]; 
-const alibabaModes = ["-------"]; 
-const tencentModels = ["-------"]; 
-const moonshotModes = ["-------"]; 
+const googleModels = ["-------"];
+const anthropicModels = ["-------"];
+const baiduModels = ["-------"];
+const bytedanceModels = ["-------"];
+const alibabaModes = ["-------"];
+const tencentModels = ["-------"];
+const moonshotModes = ["-------"];
 const iflytekModels = ["-------"];
 const deepseekModels = ["-------"];
-const xAIModes =["-------"];
+const xAIModes = ["-------"];
 const chatglmModels = ["-------"];
 const siliconflowModels = ["-------"];
 

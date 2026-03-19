@@ -1,4 +1,4 @@
-import { ApiPath, Google } from "@/app/constant";
+import { Google } from "@/app/constant";
 import {
   ChatOptions,
   getHeaders,
@@ -15,7 +15,6 @@ import {
   ChatMessageTool,
 } from "@/app/store";
 import { stream } from "@/app/utils/chat";
-import { getClientConfig } from "@/app/config/client";
 import { GEMINI_BASE_URL } from "@/app/constant";
 
 import {
@@ -38,14 +37,13 @@ export class GeminiProApi implements LLMApi {
       baseUrl = accessStore.googleUrl;
     }
 
-    const isApp = !!getClientConfig()?.isApp;
     if (baseUrl.length === 0) {
-      baseUrl = isApp ? GEMINI_BASE_URL : ApiPath.Google;
+      baseUrl = GEMINI_BASE_URL;
     }
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Google)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

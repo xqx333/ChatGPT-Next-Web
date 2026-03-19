@@ -22,8 +22,6 @@ import {
   getRequestFormatForServiceProvider,
   getServiceProviderForRequestFormat,
   KnowledgeCutOffDate,
-  MCP_SYSTEM_TEMPLATE,
-  MCP_TOOLS_TEMPLATE,
   RequestFormat,
   ServiceProvider,
   StoreKey,
@@ -37,8 +35,6 @@ import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
-import { executeMcpAction, getAllTools, isMcpEnabled } from "../mcp/actions";
-import { extractMcpJson, isMcpJson } from "../mcp/utils";
 
 const localStorage = safeLocalStorage();
 
@@ -146,10 +142,7 @@ function getSummarizeModel(
       (m) => m.name === SUMMARIZE_MODEL && m.available,
     );
     if (summarizeModel) {
-      return [
-        summarizeModel.name,
-        ServiceProvider.OpenAI,
-      ];
+      return [summarizeModel.name, ServiceProvider.OpenAI];
     }
   }
   if (requestFormat === RequestFormat.Gemini) {
@@ -201,27 +194,6 @@ function fillTemplateWith(input: string, modelConfig: ModelConfig) {
   });
 
   return output;
-}
-
-async function getMcpSystemPrompt(): Promise<string> {
-  const tools = await getAllTools();
-
-  let toolsStr = "";
-
-  tools.forEach((i) => {
-    // error client has no tools
-    if (!i.tools) return;
-
-    toolsStr += MCP_TOOLS_TEMPLATE.replace(
-      "{{ clientId }}",
-      i.clientId,
-    ).replace(
-      "{{ tools }}",
-      i.tools.tools.map((p: object) => JSON.stringify(p, null, 2)).join("\n"),
-    );
-  });
-
-  return MCP_SYSTEM_TEMPLATE.replace("{{ MCP_TOOLS }}", toolsStr);
 }
 
 const DEFAULT_CHAT_STATE = {
@@ -400,8 +372,6 @@ export const useChatStore = createPersistStore(
 
         get().updateStat(message, targetSession);
 
-        get().checkMcpJson(message);
-
         get().summarizeSession(false, targetSession);
       },
 
@@ -559,32 +529,21 @@ export const useChatStore = createPersistStore(
           (session.mask.modelConfig.model.startsWith("gpt-") ||
             session.mask.modelConfig.model.startsWith("chatgpt-"));
 
-        const mcpEnabled = await isMcpEnabled();
-        const mcpSystemPrompt = mcpEnabled ? await getMcpSystemPrompt() : "";
-
         var systemPrompts: ChatMessage[] = [];
 
         if (shouldInjectSystemPrompts) {
           systemPrompts = [
             createMessage({
               role: "system",
-              content:
-                fillTemplateWith("", {
-                  ...modelConfig,
-                  template: DEFAULT_SYSTEM_TEMPLATE,
-                }) + mcpSystemPrompt,
-            }),
-          ];
-        } else if (mcpEnabled) {
-          systemPrompts = [
-            createMessage({
-              role: "system",
-              content: mcpSystemPrompt,
+              content: fillTemplateWith("", {
+                ...modelConfig,
+                template: DEFAULT_SYSTEM_TEMPLATE,
+              }),
             }),
           ];
         }
 
-        if (shouldInjectSystemPrompts || mcpEnabled) {
+        if (shouldInjectSystemPrompts) {
           console.log(
             "[Global System Prompt] ",
             systemPrompts.at(0)?.content ?? "empty",
@@ -832,38 +791,6 @@ export const useChatStore = createPersistStore(
           lastInput,
         });
       },
-
-      /** check if the message contains MCP JSON and execute the MCP action */
-      checkMcpJson(message: ChatMessage) {
-        const mcpEnabled = isMcpEnabled();
-        if (!mcpEnabled) return;
-        const content = getMessageTextContent(message);
-        if (isMcpJson(content)) {
-          try {
-            const mcpRequest = extractMcpJson(content);
-            if (mcpRequest) {
-              console.debug("[MCP Request]", mcpRequest);
-
-              executeMcpAction(mcpRequest.clientId, mcpRequest.mcp)
-                .then((result) => {
-                  console.log("[MCP Response]", result);
-                  const mcpResponse =
-                    typeof result === "object"
-                      ? JSON.stringify(result)
-                      : String(result);
-                  get().onUserInput(
-                    `\`\`\`json:mcp-response:${mcpRequest.clientId}\n${mcpResponse}\n\`\`\``,
-                    [],
-                    true,
-                  );
-                })
-                .catch((error) => showToast("MCP execution failed", error));
-            }
-          } catch (error) {
-            console.error("[Check MCP JSON]", error);
-          }
-        }
-      },
     };
 
     return methods;
@@ -942,9 +869,10 @@ export const useChatStore = createPersistStore(
               session.mask.modelConfig.providerName,
             );
         }
-        session.mask.modelConfig.providerName = getServiceProviderForRequestFormat(
-          session.mask.modelConfig.requestFormat,
-        );
+        session.mask.modelConfig.providerName =
+          getServiceProviderForRequestFormat(
+            session.mask.modelConfig.requestFormat,
+          );
       });
 
       return newState as any;

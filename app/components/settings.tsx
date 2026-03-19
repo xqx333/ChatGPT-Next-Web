@@ -1464,7 +1464,7 @@ export function Settings() {
 
   return (
     <ErrorBoundary>
-      <div className="window-header" data-tauri-drag-region>
+      <div className="window-header">
         <div className="window-header-title">
           <div className="window-header-main-title">
             {Locale.Settings.Title}
@@ -1797,15 +1797,12 @@ export function Settings() {
                       value={accessStore.requestFormat}
                       onChange={(e) => {
                         const requestFormat = e.target.value as RequestFormat;
-                        accessStore.update(
-                          (access) => {
-                            access.requestFormat = requestFormat;
-                            access.provider =
-                              getServiceProviderForRequestFormat(
-                                requestFormat,
-                              ) as ServiceProvider;
-                          },
-                        );
+                        accessStore.update((access) => {
+                          access.requestFormat = requestFormat;
+                          access.provider = getServiceProviderForRequestFormat(
+                            requestFormat,
+                          ) as ServiceProvider;
+                        });
                       }}
                     >
                       {REQUEST_FORMAT_OPTIONS.map((requestFormat) => (

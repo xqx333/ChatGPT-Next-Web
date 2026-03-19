@@ -1,5 +1,5 @@
 "use client";
-import { ApiPath, Alibaba, ALIBABA_BASE_URL } from "@/app/constant";
+import { Alibaba, ALIBABA_BASE_URL } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -20,7 +20,6 @@ import {
   MultimodalContent,
   MultimodalContentForAlibaba,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
@@ -69,14 +68,13 @@ export class QwenApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      baseUrl = isApp ? ALIBABA_BASE_URL : ApiPath.Alibaba;
+      baseUrl = ALIBABA_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Alibaba)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

@@ -133,10 +133,6 @@ const en: LocaleType = {
       Toast: "Capturing Image...",
       Modal: "Long press or right click to save image",
     },
-    Artifacts: {
-      Title: "Share Artifacts",
-      Error: "Share Error",
-    },
   },
   Select: {
     Search: "Search",
@@ -344,7 +340,7 @@ const en: LocaleType = {
 
         Endpoint: {
           Title: "OpenAI Endpoint",
-          SubTitle: "Must start with http(s):// or use /api/openai as default",
+          SubTitle: "Must start with http(s)://",
         },
       },
       Azure: {

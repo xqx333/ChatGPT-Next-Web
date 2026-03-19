@@ -1,5 +1,5 @@
 "use client";
-import { ApiPath, CHATGLM_BASE_URL, ChatGLM } from "@/app/constant";
+import { CHATGLM_BASE_URL, ChatGLM } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -15,7 +15,6 @@ import {
   LLMModel,
   SpeechOptions,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
   isVisionModel,
@@ -129,15 +128,13 @@ export class ChatGLMApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.ChatGLM;
-      baseUrl = isApp ? CHATGLM_BASE_URL : apiPath;
+      baseUrl = CHATGLM_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.ChatGLM)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

@@ -1,10 +1,5 @@
 "use client";
-import {
-  ApiPath,
-  IFLYTEK_BASE_URL,
-  Iflytek,
-  REQUEST_TIMEOUT_MS,
-} from "@/app/constant";
+import { IFLYTEK_BASE_URL, Iflytek, REQUEST_TIMEOUT_MS } from "@/app/constant";
 import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
 
 import {
@@ -20,7 +15,6 @@ import {
   fetchEventSource,
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "@/app/utils/format";
-import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
 
@@ -39,15 +33,13 @@ export class SparkApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.Iflytek;
-      baseUrl = isApp ? IFLYTEK_BASE_URL : apiPath;
+      baseUrl = IFLYTEK_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Iflytek)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

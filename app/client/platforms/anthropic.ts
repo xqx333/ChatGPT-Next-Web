@@ -1,4 +1,4 @@
-import { Anthropic, ApiPath } from "@/app/constant";
+import { Anthropic } from "@/app/constant";
 import { ChatOptions, getHeaders, LLMApi, SpeechOptions } from "../api";
 import {
   useAccessStore,
@@ -7,7 +7,6 @@ import {
   usePluginStore,
   ChatMessageTool,
 } from "@/app/store";
-import { getClientConfig } from "@/app/config/client";
 import { ANTHROPIC_BASE_URL } from "@/app/constant";
 import { getMessageTextContent, isVisionModel } from "@/app/utils";
 import { preProcessImageContent, stream } from "@/app/utils/chat";
@@ -388,12 +387,10 @@ export class ClaudeApi implements LLMApi {
 
     // if endpoint is empty, use default endpoint
     if (baseUrl.trim().length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-
-      baseUrl = isApp ? ANTHROPIC_BASE_URL : ApiPath.Anthropic;
+      baseUrl = ANTHROPIC_BASE_URL;
     }
 
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith("/api")) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

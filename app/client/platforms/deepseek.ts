@@ -1,6 +1,6 @@
 "use client";
 // azure and openai, using same models. so using same LLMApi.
-import { ApiPath, DEEPSEEK_BASE_URL, DeepSeek } from "@/app/constant";
+import { DEEPSEEK_BASE_URL, DeepSeek } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -16,7 +16,6 @@ import {
   LLMModel,
   SpeechOptions,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
@@ -38,15 +37,13 @@ export class DeepSeekApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.DeepSeek;
-      baseUrl = isApp ? DEEPSEEK_BASE_URL : apiPath;
+      baseUrl = DEEPSEEK_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.DeepSeek)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 

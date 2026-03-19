@@ -29,6 +29,7 @@ import Locale from "../locales";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import clsx from "clsx";
+import { getClientConfig } from "../config/client";
 
 export function PluginPage() {
   const navigate = useNavigate();
@@ -89,6 +90,9 @@ export function PluginPage() {
   const loadFromUrl = (loadUrl: string) =>
     fetch(loadUrl)
       .catch((e) => {
+        if (getClientConfig()?.buildMode === "export") {
+          throw e;
+        }
         const p = new URL(loadUrl);
         return fetch(`/api/proxy/${p.pathname}?${p.search}`, {
           headers: {

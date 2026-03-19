@@ -1,5 +1,5 @@
 "use client";
-import { ApiPath, Baidu, BAIDU_BASE_URL } from "@/app/constant";
+import { Baidu, BAIDU_BASE_URL } from "@/app/constant";
 import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
 import { getAccessToken } from "@/app/utils/baidu";
 
@@ -17,7 +17,6 @@ import {
   fetchEventSource,
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "@/app/utils/format";
-import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent, getTimeoutMSByModel } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
 
@@ -55,15 +54,13 @@ export class ErnieApi implements LLMApi {
     }
 
     if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      // do not use proxy for baidubce api
-      baseUrl = isApp ? BAIDU_BASE_URL : ApiPath.Baidu;
+      baseUrl = BAIDU_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Baidu)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 
@@ -125,19 +122,16 @@ export class ErnieApi implements LLMApi {
     try {
       let chatPath = this.path(Baidu.ChatPath(modelConfig.model));
 
-      // getAccessToken can not run in browser, because cors error
-      if (!!getClientConfig()?.isApp) {
-        const accessStore = useAccessStore.getState();
-        if (accessStore.useCustomConfig) {
-          if (accessStore.isValidBaidu()) {
-            const { access_token } = await getAccessToken(
-              accessStore.baiduApiKey,
-              accessStore.baiduSecretKey,
-            );
-            chatPath = `${chatPath}${
-              chatPath.includes("?") ? "&" : "?"
-            }access_token=${access_token}`;
-          }
+      const accessStore = useAccessStore.getState();
+      if (accessStore.useCustomConfig) {
+        if (accessStore.isValidBaidu()) {
+          const { access_token } = await getAccessToken(
+            accessStore.baiduApiKey,
+            accessStore.baiduSecretKey,
+          );
+          chatPath = `${chatPath}${
+            chatPath.includes("?") ? "&" : "?"
+          }access_token=${access_token}`;
         }
       }
       const chatPayload = {

@@ -215,7 +215,7 @@ export class ClientApi {
     const clientConfig = getClientConfig();
     const proxyUrl = "/sharegpt";
     const rawUrl = "https://sharegpt.com/api/conversations";
-    const shareUrl = clientConfig?.isApp ? rawUrl : proxyUrl;
+    const shareUrl = clientConfig?.buildMode === "export" ? rawUrl : proxyUrl;
     const res = await fetch(shareUrl, {
       body: JSON.stringify({
         avatarUrl,
@@ -346,8 +346,8 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     apiKey,
     isEnabledAccessControl,
   } = getConfig();
-  // when using baidu api in app, not set auth header
-  if (isBaidu && clientConfig?.isApp) return headers;
+  // Baidu direct calls use an access_token in the URL instead of auth headers.
+  if (isBaidu) return headers;
 
   const authHeader = getAuthHeader();
 

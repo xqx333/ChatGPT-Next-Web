@@ -1,9 +1,4 @@
-import {
-  Stability,
-  StoreKey,
-  ACCESS_CODE_PREFIX,
-  ApiPath,
-} from "@/app/constant";
+import { Stability, StoreKey } from "@/app/constant";
 import { getBearerToken } from "@/app/client/api";
 import { createPersistStore } from "@/app/utils/store";
 import { nanoid } from "nanoid";
@@ -64,17 +59,11 @@ export const useSdStore = createPersistStore<
       },
       stabilityRequestCall(data: any) {
         const accessStore = useAccessStore.getState();
-        let prefix: string = ApiPath.Stability as string;
-        let bearerToken = "";
-        if (accessStore.useCustomConfig) {
-          prefix = accessStore.stabilityUrl || (ApiPath.Stability as string);
-          bearerToken = getBearerToken(accessStore.stabilityApiKey);
+        let prefix = accessStore.stabilityUrl || Stability.ExampleEndpoint;
+        if (!prefix.startsWith("http")) {
+          prefix = "https://" + prefix;
         }
-        if (!bearerToken && accessStore.enabledAccessControl()) {
-          bearerToken = getBearerToken(
-            ACCESS_CODE_PREFIX + accessStore.accessCode,
-          );
-        }
+        const bearerToken = getBearerToken(accessStore.stabilityApiKey);
         const headers = {
           Accept: "application/json",
           Authorization: bearerToken,

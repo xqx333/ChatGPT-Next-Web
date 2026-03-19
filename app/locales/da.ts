@@ -132,10 +132,6 @@ const da: PartialLocaleType = {
       Toast: "Laver billede...",
       Modal: "Tryk længe eller højreklik for at gemme",
     },
-    Artifacts: {
-      Title: "Del side",
-      Error: "Fejl ved deling",
-    },
   },
   Select: {
     Search: "Søg",
@@ -325,7 +321,7 @@ const da: PartialLocaleType = {
         },
         Endpoint: {
           Title: "OpenAI Endpoint",
-          SubTitle: "Skal starte med http(s):// eller /api/openai som standard",
+          SubTitle: "Skal starte med http(s)://",
         },
       },
       Azure: {
