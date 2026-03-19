@@ -44,6 +44,14 @@ type ResponsesFunctionTool = {
   parameters: object;
 };
 
+type OpenAIFunctionTool = {
+  function: {
+    name: string;
+    description?: string;
+    parameters: object;
+  };
+};
+
 type ResponsesToolOutput = {
   type: "function_call_output";
   call_id: string;
@@ -80,9 +88,7 @@ function extractOutputTextFromResponse(res: any): string {
 }
 
 export class OpenAIResponsesApi extends ChatGPTApi {
-  private mapTool(tool: {
-    function: { name: string; description?: string; parameters: object };
-  }): ResponsesFunctionTool {
+  private mapTool(tool: OpenAIFunctionTool): ResponsesFunctionTool {
     return {
       type: "function",
       name: tool.function.name,
@@ -164,7 +170,7 @@ export class OpenAIResponsesApi extends ChatGPTApi {
           .getState()
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
-          );
+          ) as [OpenAIFunctionTool[], Record<string, Function>];
 
         const itemIndexById = new Map<string, number>();
         let previousResponseId = "";

@@ -265,18 +265,9 @@ export function RealtimeChat({
   const handleConnectRef = useRef(handleConnect);
   const toggleRecordingRef = useRef(toggleRecording);
   const disconnectRef = useRef(disconnect);
-
-  useEffect(() => {
-    handleConnectRef.current = handleConnect;
-  }, [handleConnect]);
-
-  useEffect(() => {
-    toggleRecordingRef.current = toggleRecording;
-  }, [toggleRecording]);
-
-  useEffect(() => {
-    disconnectRef.current = disconnect;
-  }, [disconnect]);
+  handleConnectRef.current = handleConnect;
+  toggleRecordingRef.current = toggleRecording;
+  disconnectRef.current = disconnect;
 
   useEffect(() => {
     // 防止重复初始化

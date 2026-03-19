@@ -263,10 +263,14 @@ export const useAccessStore = createPersistStore(
             const [model, providerName] = getModelProvider(defaultModel);
             const requestFormat =
               getRequestFormatForServiceProvider(providerName);
+            const normalizedProvider = Object.values(ServiceProvider).includes(
+              providerName as ServiceProvider,
+            )
+              ? (providerName as ServiceProvider)
+              : getServiceProviderForRequestFormat(requestFormat);
             DEFAULT_CONFIG.modelConfig.model = model;
             DEFAULT_CONFIG.modelConfig.requestFormat = requestFormat;
-            DEFAULT_CONFIG.modelConfig.providerName =
-              providerName || getServiceProviderForRequestFormat(requestFormat);
+            DEFAULT_CONFIG.modelConfig.providerName = normalizedProvider;
           }
 
           return res;
@@ -303,7 +307,9 @@ export const useAccessStore = createPersistStore(
         provider?: string;
       };
       if (!state.requestFormat) {
-        state.requestFormat = getRequestFormatForServiceProvider(state.provider);
+        state.requestFormat = getRequestFormatForServiceProvider(
+          state.provider,
+        );
       }
       state.provider = getServiceProviderForRequestFormat(
         state.requestFormat,
