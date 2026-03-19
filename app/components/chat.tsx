@@ -119,6 +119,7 @@ import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
+import { ChatModelSelector } from "./chat-model-selector";
 import { ClientApi, MultimodalContent } from "../client/api";
 import { createTTSPlayer } from "../utils/audio";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
@@ -655,22 +656,18 @@ export function ChatActions(props: {
         />
 
         {showModelSelector && (
-          <Selector
-            defaultSelectedValue={currentModel}
-            items={models.map((m) => ({
-              title: m.displayName ?? m.name,
-              value: m.name,
-            }))}
+          <ChatModelSelector
+            currentModel={currentModel}
+            models={models}
             onClose={() => setShowModelSelector(false)}
-            onSelection={(s) => {
-              if (s.length === 0) return;
-              const model = s[0];
+            onSelect={(model) => {
               chatStore.updateTargetSession(session, (session) => {
                 session.mask.modelConfig.model = model as ModelType;
                 session.mask.syncGlobalConfig = false;
               });
               const selectedModel = models.find((m) => m.name == model);
               showToast(selectedModel?.displayName ?? model);
+              setShowModelSelector(false);
             }}
           />
         )}
