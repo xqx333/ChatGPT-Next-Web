@@ -17,6 +17,7 @@ import { DEFAULT_MASK_AVATAR, Mask, useMaskStore } from "../store/mask";
 import {
   ChatMessage,
   createMessage,
+  mergeModelConfigPreservingRequestFormat,
   ModelConfig,
   ModelType,
   useAppConfig,
@@ -79,6 +80,7 @@ export function MaskConfig(props: {
   extraListItems?: JSX.Element;
   readonly?: boolean;
   shouldSyncFromGlobal?: boolean;
+  requestFormatReadonly?: boolean;
 }) {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -233,7 +235,10 @@ export function MaskConfig(props: {
                 ) {
                   props.updateMask((mask) => {
                     mask.syncGlobalConfig = checked;
-                    mask.modelConfig = { ...globalConfig.modelConfig };
+                    mask.modelConfig = mergeModelConfigPreservingRequestFormat(
+                      globalConfig.modelConfig,
+                      mask.modelConfig,
+                    );
                   });
                 } else if (!checked) {
                   props.updateMask((mask) => {
@@ -250,6 +255,7 @@ export function MaskConfig(props: {
         <ModelConfigList
           modelConfig={{ ...props.mask.modelConfig }}
           updateConfig={updateConfig}
+          requestFormatReadonly={props.requestFormatReadonly}
         />
         {props.extraListItems}
       </List>

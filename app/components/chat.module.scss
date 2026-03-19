@@ -143,6 +143,19 @@
   }
 }
 
+.chat-request-format-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: var(--border-in-light);
+  background-color: var(--second);
+  color: var(--primary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 .context-prompt {
   .context-prompt-insert {
     display: flex;

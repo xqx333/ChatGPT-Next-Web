@@ -198,11 +198,29 @@
   font-size: 14px;
   font-weight: bolder;
   display: block;
-  width: calc(100% - 15px);
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   animation: slide-in ease 0.3s;
+}
+
+.chat-item-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-item-request-format {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 999px;
+  border: var(--border-in-light);
+  background-color: var(--second);
+  color: var(--primary);
 }
 
 .chat-item-delete {

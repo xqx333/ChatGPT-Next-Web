@@ -382,7 +382,7 @@ export class ClaudeApi implements LLMApi {
     let baseUrl: string = "";
 
     if (accessStore.useCustomConfig) {
-      baseUrl = accessStore.anthropicUrl;
+      baseUrl = accessStore.openaiUrl || accessStore.anthropicUrl;
     }
 
     // if endpoint is empty, use default endpoint

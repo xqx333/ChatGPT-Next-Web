@@ -608,18 +608,19 @@ export function Settings() {
   }
 
   const accessStore = useAccessStore();
+  const isOpenAIRequestFormat =
+    accessStore.requestFormat === RequestFormat.OpenAIChat ||
+    accessStore.requestFormat === RequestFormat.OpenAIResponses;
   const shouldHideBalanceQuery = useMemo(() => {
     const isOpenAiUrl = accessStore.openaiUrl.includes(OPENAI_BASE_URL);
 
     return (
-      accessStore.hideBalanceQuery ||
-      isOpenAiUrl ||
-      accessStore.provider === ServiceProvider.Azure
+      accessStore.hideBalanceQuery || !isOpenAIRequestFormat || isOpenAiUrl
     );
   }, [
     accessStore.hideBalanceQuery,
     accessStore.openaiUrl,
-    accessStore.provider,
+    isOpenAIRequestFormat,
   ]);
 
   const usage = {
@@ -675,6 +676,14 @@ export function Settings() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (accessStore.requestFormat !== config.modelConfig.requestFormat) {
+      accessStore.update(
+        (access) => (access.requestFormat = config.modelConfig.requestFormat),
+      );
+    }
+  }, [accessStore, config.modelConfig.requestFormat]);
 
   const clientConfig = useMemo(() => getClientConfig(), []);
   const showAccessCode = enabledAccessControl && !clientConfig?.isApp;
@@ -740,6 +749,122 @@ export function Settings() {
         ></input>
       </ListItem>
     );
+
+  const isGeminiRequestFormat =
+    accessStore.requestFormat === RequestFormat.Gemini;
+  const isAnthropicRequestFormat =
+    accessStore.requestFormat === RequestFormat.Anthropic;
+
+  const requestFormatEndpointConfig = isGeminiRequestFormat
+    ? {
+        title: Locale.Settings.Access.Google.Endpoint.Title,
+        subTitle:
+          Locale.Settings.Access.Google.Endpoint.SubTitle +
+          Google.ExampleEndpoint,
+        placeholder: Google.ExampleEndpoint,
+      }
+    : isAnthropicRequestFormat
+    ? {
+        title: Locale.Settings.Access.Anthropic.Endpoint.Title,
+        subTitle:
+          Locale.Settings.Access.Anthropic.Endpoint.SubTitle +
+          Anthropic.ExampleEndpoint,
+        placeholder: Anthropic.ExampleEndpoint,
+      }
+    : {
+        title: Locale.Settings.Access.OpenAI.Endpoint.Title,
+        subTitle: Locale.Settings.Access.OpenAI.Endpoint.SubTitle,
+        placeholder: OPENAI_BASE_URL,
+      };
+
+  const requestFormatApiKeyConfig = isGeminiRequestFormat
+    ? Locale.Settings.Access.Google.ApiKey
+    : isAnthropicRequestFormat
+    ? Locale.Settings.Access.Anthropic.ApiKey
+    : Locale.Settings.Access.OpenAI.ApiKey;
+
+  const requestFormatAccessConfigComponent = (
+    <>
+      <ListItem
+        title={requestFormatEndpointConfig.title}
+        subTitle={requestFormatEndpointConfig.subTitle}
+      >
+        <input
+          aria-label={requestFormatEndpointConfig.title}
+          type="text"
+          value={accessStore.openaiUrl}
+          placeholder={requestFormatEndpointConfig.placeholder}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.openaiUrl = e.currentTarget.value),
+            )
+          }
+        ></input>
+      </ListItem>
+      <ListItem
+        title={requestFormatApiKeyConfig.Title}
+        subTitle={requestFormatApiKeyConfig.SubTitle}
+      >
+        <PasswordInput
+          aria={Locale.Settings.ShowPassword}
+          aria-label={requestFormatApiKeyConfig.Title}
+          value={accessStore.openaiApiKey}
+          type="text"
+          placeholder={requestFormatApiKeyConfig.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.openaiApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+      {isGeminiRequestFormat && (
+        <ListItem
+          title={Locale.Settings.Access.Google.GoogleSafetySettings.Title}
+          subTitle={Locale.Settings.Access.Google.GoogleSafetySettings.SubTitle}
+        >
+          <Select
+            aria-label={
+              Locale.Settings.Access.Google.GoogleSafetySettings.Title
+            }
+            value={accessStore.googleSafetySettings}
+            onChange={(e) => {
+              accessStore.update(
+                (access) =>
+                  (access.googleSafetySettings = e.target
+                    .value as GoogleSafetySettingsThreshold),
+              );
+            }}
+          >
+            {Object.entries(GoogleSafetySettingsThreshold).map(([k, v]) => (
+              <option value={v} key={k}>
+                {k}
+              </option>
+            ))}
+          </Select>
+        </ListItem>
+      )}
+      {isAnthropicRequestFormat && (
+        <ListItem
+          title={Locale.Settings.Access.Anthropic.ApiVerion.Title}
+          subTitle={Locale.Settings.Access.Anthropic.ApiVerion.SubTitle}
+        >
+          <input
+            aria-label={Locale.Settings.Access.Anthropic.ApiVerion.Title}
+            type="text"
+            value={accessStore.anthropicApiVersion}
+            placeholder={Anthropic.Vision}
+            onChange={(e) =>
+              accessStore.update(
+                (access) =>
+                  (access.anthropicApiVersion = e.currentTarget.value),
+              )
+            }
+          ></input>
+        </ListItem>
+      )}
+    </>
+  );
 
   const openAIConfigComponent = accessStore.provider ===
     ServiceProvider.OpenAI && (
@@ -1799,9 +1924,13 @@ export function Settings() {
                         const requestFormat = e.target.value as RequestFormat;
                         accessStore.update((access) => {
                           access.requestFormat = requestFormat;
-                          access.provider = getServiceProviderForRequestFormat(
-                            requestFormat,
-                          ) as ServiceProvider;
+                        });
+                        config.update((config) => {
+                          config.modelConfig.requestFormat = requestFormat;
+                          config.modelConfig.providerName =
+                            getServiceProviderForRequestFormat(requestFormat);
+                          config.modelConfig.compressProviderName =
+                            config.modelConfig.providerName;
                         });
                       }}
                     >
@@ -1813,21 +1942,7 @@ export function Settings() {
                     </Select>
                   </ListItem>
 
-                  {openAIConfigComponent}
-                  {azureConfigComponent}
-                  {googleConfigComponent}
-                  {anthropicConfigComponent}
-                  {baiduConfigComponent}
-                  {byteDanceConfigComponent}
-                  {alibabaConfigComponent}
-                  {tencentConfigComponent}
-                  {moonshotConfigComponent}
-                  {deepseekConfigComponent}
-                  {stabilityConfigComponent}
-                  {lflytekConfigComponent}
-                  {XAIConfigComponent}
-                  {chatglmConfigComponent}
-                  {siliconflowConfigComponent}
+                  {requestFormatAccessConfigComponent}
                 </>
               )}
             </>
@@ -1886,6 +2001,11 @@ export function Settings() {
               const modelConfig = { ...config.modelConfig };
               updater(modelConfig);
               config.update((config) => (config.modelConfig = modelConfig));
+            }}
+            onRequestFormatChange={(requestFormat) => {
+              accessStore.update(
+                (access) => (access.requestFormat = requestFormat),
+              );
             }}
           />
         </List>

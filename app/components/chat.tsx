@@ -53,6 +53,7 @@ import {
   ChatMessage,
   createMessage,
   DEFAULT_TOPIC,
+  mergeModelConfigPreservingRequestFormat,
   ModelType,
   SubmitKey,
   Theme,
@@ -104,6 +105,8 @@ import {
   DEFAULT_TTS_ENGINE,
   ModelProvider,
   Path,
+  RequestFormat,
+  REQUEST_FORMAT_LABELS,
   REQUEST_TIMEOUT_MS,
   ServiceProvider,
   UNFINISHED_INPUT,
@@ -183,6 +186,7 @@ export function SessionConfigModel(props: { onClose: () => void }) {
             );
           }}
           shouldSyncFromGlobal
+          requestFormatReadonly
           extraListItems={
             session.mask.modelConfig.sendMemory ? (
               <ListItem
@@ -950,6 +954,10 @@ function _Chat() {
   const config = useAppConfig();
   const fontSize = config.fontSize;
   const fontFamily = config.fontFamily;
+  const currentRequestFormatLabel =
+    REQUEST_FORMAT_LABELS[
+      session.mask.modelConfig.requestFormat ?? RequestFormat.OpenAIChat
+    ];
 
   const [showExport, setShowExport] = useState(false);
 
@@ -1124,7 +1132,10 @@ function _Chat() {
       // auto sync mask config from global config
       if (session.mask.syncGlobalConfig) {
         console.log("[Mask] syncing from global, name = ", session.mask.name);
-        session.mask.modelConfig = { ...config.modelConfig };
+        session.mask.modelConfig = mergeModelConfigPreservingRequestFormat(
+          config.modelConfig,
+          session.mask.modelConfig,
+        );
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1666,6 +1677,9 @@ function _Chat() {
             </div>
             <div className="window-header-sub-title">
               {Locale.Chat.SubTitle(session.messages.length)}
+              <span className={styles["chat-request-format-tag"]}>
+                {currentRequestFormatLabel}
+              </span>
             </div>
           </div>
           <div className="window-actions">

@@ -34,7 +34,7 @@ export class GeminiProApi implements LLMApi {
 
     let baseUrl = "";
     if (accessStore.useCustomConfig) {
-      baseUrl = accessStore.googleUrl;
+      baseUrl = accessStore.openaiUrl || accessStore.googleUrl;
     }
 
     if (baseUrl.length === 0) {

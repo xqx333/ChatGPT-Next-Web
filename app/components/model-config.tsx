@@ -17,6 +17,8 @@ import styles from "./model-config.module.scss";
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
   updateConfig: (updater: (config: ModelConfig) => void) => void;
+  requestFormatReadonly?: boolean;
+  onRequestFormatChange?: (requestFormat: RequestFormat) => void;
 }) {
   const allModels = useAllModels();
   const models = useMemo(() => {
@@ -63,6 +65,7 @@ export function ModelConfigList(props: {
         <Select
           aria-label={Locale.Settings.Access.Provider.Title}
           value={props.modelConfig.requestFormat ?? RequestFormat.OpenAIChat}
+          disabled={props.requestFormatReadonly}
           onChange={(e) => {
             const requestFormat = e.currentTarget.value as RequestFormat;
             props.updateConfig((config) => {
@@ -71,6 +74,7 @@ export function ModelConfigList(props: {
                 getServiceProviderForRequestFormat(requestFormat);
               config.compressProviderName = config.providerName;
             });
+            props.onRequestFormatChange?.(requestFormat);
           }}
         >
           {REQUEST_FORMAT_OPTIONS.map((requestFormat) => (

@@ -12,7 +12,7 @@ import { useChatStore } from "../store";
 
 import Locale from "../locales";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Path } from "../constant";
+import { Path, REQUEST_FORMAT_LABELS, RequestFormat } from "../constant";
 import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
 import { useRef, useEffect } from "react";
@@ -31,6 +31,7 @@ export function ChatItem(props: {
   index: number;
   narrow?: boolean;
   mask: Mask;
+  requestFormat: RequestFormat;
 }) {
   const draggableRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -60,7 +61,7 @@ export function ChatItem(props: {
           {...provided.dragHandleProps}
           title={`${props.title}\n${Locale.ChatItem.ChatItemCount(
             props.count,
-          )}`}
+          )}\n${REQUEST_FORMAT_LABELS[props.requestFormat]}`}
         >
           {props.narrow ? (
             <div className={styles["chat-item-narrow"]}>
@@ -76,7 +77,12 @@ export function ChatItem(props: {
             </div>
           ) : (
             <>
-              <div className={styles["chat-item-title"]}>{props.title}</div>
+              <div className={styles["chat-item-title-row"]}>
+                <div className={styles["chat-item-title"]}>{props.title}</div>
+                <div className={styles["chat-item-request-format"]}>
+                  {REQUEST_FORMAT_LABELS[props.requestFormat]}
+                </div>
+              </div>
               <div className={styles["chat-item-info"]}>
                 <div className={styles["chat-item-count"]}>
                   {Locale.ChatItem.ChatItemCount(props.count)}
@@ -163,6 +169,10 @@ export function ChatList(props: { narrow?: boolean }) {
                 }}
                 narrow={props.narrow}
                 mask={item.mask}
+                requestFormat={
+                  item.mask.modelConfig.requestFormat ??
+                  RequestFormat.OpenAIChat
+                }
               />
             ))}
             {provided.placeholder}

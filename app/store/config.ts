@@ -118,6 +118,27 @@ export type ModelConfig = ChatConfig["modelConfig"];
 export type TTSConfig = ChatConfig["ttsConfig"];
 export type RealtimeConfig = ChatConfig["realtimeConfig"];
 
+export function mergeModelConfigPreservingRequestFormat(
+  globalModelConfig: ModelConfig,
+  currentModelConfig: ModelConfig,
+): ModelConfig {
+  const requestFormat =
+    currentModelConfig.requestFormat ??
+    globalModelConfig.requestFormat ??
+    RequestFormat.OpenAIChat;
+  const providerName =
+    currentModelConfig.providerName ??
+    getServiceProviderForRequestFormat(requestFormat);
+
+  return {
+    ...globalModelConfig,
+    requestFormat,
+    providerName,
+    compressProviderName:
+      currentModelConfig.compressProviderName || providerName,
+  };
+}
+
 export function limitNumber(
   x: number,
   min: number,

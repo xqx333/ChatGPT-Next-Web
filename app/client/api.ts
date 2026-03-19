@@ -1,8 +1,8 @@
-import { getClientConfig } from "../config/client";
 import {
   ACCESS_CODE_PREFIX,
   ModelProvider,
   RequestFormat,
+  getRequestFormatForServiceProvider,
   ServiceProvider,
 } from "../constant";
 import {
@@ -218,14 +218,15 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       Accept: "application/json",
     };
   }
-
-  const clientConfig = getClientConfig();
-
   function getConfig() {
     const modelConfig = chatStore.currentSession().mask.modelConfig;
-    const isGoogle = modelConfig.providerName === ServiceProvider.Google;
+    const requestFormat =
+      modelConfig.requestFormat ??
+      getRequestFormatForServiceProvider(modelConfig.providerName);
+    const useSharedCustomConfig = accessStore.useCustomConfig;
+    const isGoogle = requestFormat === RequestFormat.Gemini;
     const isAzure = modelConfig.providerName === ServiceProvider.Azure;
-    const isAnthropic = modelConfig.providerName === ServiceProvider.Anthropic;
+    const isAnthropic = requestFormat === RequestFormat.Anthropic;
     const isBaidu = modelConfig.providerName == ServiceProvider.Baidu;
     const isByteDance = modelConfig.providerName === ServiceProvider.ByteDance;
     const isAlibaba = modelConfig.providerName === ServiceProvider.Alibaba;
@@ -237,7 +238,9 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     const isSiliconFlow =
       modelConfig.providerName === ServiceProvider.SiliconFlow;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isGoogle
+    const apiKey = useSharedCustomConfig
+      ? accessStore.openaiApiKey
+      : isGoogle
       ? accessStore.googleApiKey
       : isAzure
       ? accessStore.azureApiKey
@@ -331,6 +334,15 @@ export function getClientApi(
   provider: ServiceProvider,
   requestFormat: RequestFormat = RequestFormat.OpenAIChat,
 ): ClientApi {
+  switch (requestFormat) {
+    case RequestFormat.Gemini:
+      return new ClientApi(ModelProvider.GeminiPro, requestFormat);
+    case RequestFormat.Anthropic:
+      return new ClientApi(ModelProvider.Claude, requestFormat);
+    case RequestFormat.OpenAIResponses:
+      return new ClientApi(ModelProvider.GPT, requestFormat);
+  }
+
   switch (provider) {
     case ServiceProvider.Google:
       return new ClientApi(ModelProvider.GeminiPro, requestFormat);
