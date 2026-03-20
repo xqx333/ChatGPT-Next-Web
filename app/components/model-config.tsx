@@ -21,7 +21,7 @@ import {
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
-import { ListItem, Select } from "./ui-lib";
+import { ListItem, SearchSelect, Select } from "./ui-lib";
 import { useAllModels } from "../utils/hooks";
 import { useMemo } from "react";
 import styles from "./model-config.module.scss";
@@ -76,26 +76,34 @@ export function ModelConfigList(props: {
   ];
   const gptImageOutputFormats: GptImageOutputFormat[] = ["png", "jpeg", "webp"];
   const gptImageModerations: GptImageModeration[] = ["auto", "low"];
+  const modelOptions = useMemo(
+    () =>
+      models.map((model) => ({
+        value: model.name,
+        label: model.displayName ?? model.name,
+        keywords: `${model.name} ${model.displayName ?? ""}`.trim(),
+      })),
+    [models],
+  );
 
   return (
     <>
       <ListItem title={Locale.Settings.Model}>
-        <Select
-          aria-label={Locale.Settings.Model}
+        <SearchSelect
+          ariaLabel={Locale.Settings.Model}
+          className={styles["select-compress-model"]}
           value={value}
-          align="left"
-          onChange={(e) => {
+          options={modelOptions}
+          searchPlaceholder={
+            Locale.Settings.Access.CustomModel.Modal.SearchPlaceholder
+          }
+          noResultText={Locale.SearchChat.Page.NoResult}
+          onChange={(nextValue) => {
             props.updateConfig((config) => {
-              config.model = ModalConfigValidator.model(e.currentTarget.value);
+              config.model = ModalConfigValidator.model(nextValue);
             });
           }}
-        >
-          {models.map((model, index) => (
-            <option value={model.name} key={index}>
-              {model.displayName ?? model.name}
-            </option>
-          ))}
-        </Select>
+        />
       </ListItem>
       <ListItem
         title={Locale.Settings.Access.Provider.Title}

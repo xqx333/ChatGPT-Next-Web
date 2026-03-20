@@ -9,6 +9,7 @@ import ConfirmIcon from "../icons/confirm.svg";
 import CancelIcon from "../icons/cancel.svg";
 import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
+import ZoomIcon from "../icons/zoom.svg";
 
 import Locale from "../locales";
 
@@ -316,6 +317,158 @@ export function Select(
         {children}
       </select>
       <DownIcon className={styles["select-with-icon-icon"]} />
+    </div>
+  );
+}
+
+export type SearchSelectOption = {
+  value: string;
+  label: string;
+  keywords?: string;
+  disabled?: boolean;
+};
+
+export function SearchSelect(props: {
+  value: string;
+  options: SearchSelectOption[];
+  onChange: (value: string) => void;
+  className?: string;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  noResultText?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selectedOption = props.options.find(
+    (option) => option.value === props.value,
+  );
+  const keyword = search.trim().toLowerCase();
+  const filteredOptions = props.options.filter((option) => {
+    if (!keyword) return true;
+
+    const haystack = [option.label, option.value, option.keywords]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(keyword);
+  });
+
+  useEffect(() => {
+    if (!open) {
+      setSearch("");
+      return;
+    }
+
+    const focusId = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+
+    const handlePointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (!containerRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusId);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      className={clsx(styles["search-select"], props.className)}
+      ref={containerRef}
+    >
+      <button
+        type="button"
+        className={styles["search-select-trigger"]}
+        aria-label={props.ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={props.disabled}
+        onClick={() => {
+          if (!props.disabled) {
+            setOpen((prev) => !prev);
+          }
+        }}
+      >
+        <span className={styles["search-select-trigger-text"]}>
+          {selectedOption?.label ?? props.value ?? props.placeholder ?? ""}
+        </span>
+        <DownIcon className={styles["search-select-trigger-icon"]} />
+      </button>
+
+      {open && (
+        <div className={styles["search-select-menu"]}>
+          <div className={styles["search-select-search"]}>
+            <ZoomIcon className={styles["search-select-search-icon"]} />
+            <input
+              ref={inputRef}
+              className={styles["search-select-search-input"]}
+              value={search}
+              placeholder={props.searchPlaceholder ?? Locale.Select.Search}
+              onChange={(e) => setSearch(e.currentTarget.value)}
+            />
+          </div>
+          <div className={styles["search-select-options"]} role="listbox">
+            {filteredOptions.length === 0 ? (
+              <div className={styles["search-select-empty"]}>
+                {props.noResultText ?? Locale.SearchChat.Page.NoResult}
+              </div>
+            ) : (
+              filteredOptions.map((option) => {
+                const selected = option.value === props.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={clsx(styles["search-select-option"], {
+                      [styles["search-select-option-selected"]]: selected,
+                    })}
+                    disabled={option.disabled}
+                    onClick={() => {
+                      if (option.disabled) return;
+                      props.onChange(option.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className={styles["search-select-option-label"]}>
+                      {option.label}
+                    </span>
+                    {option.label !== option.value && (
+                      <span className={styles["search-select-option-value"]}>
+                        {option.value}
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
