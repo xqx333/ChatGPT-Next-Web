@@ -333,6 +333,7 @@ export function SearchSelect(props: {
   options: SearchSelectOption[];
   onChange: (value: string) => void;
   className?: string;
+  compact?: boolean;
   placeholder?: string;
   searchPlaceholder?: string;
   noResultText?: string;
@@ -397,7 +398,13 @@ export function SearchSelect(props: {
 
   return (
     <div
-      className={clsx(styles["search-select"], props.className)}
+      className={clsx(
+        styles["search-select"],
+        {
+          [styles["search-select-compact"]]: props.compact,
+        },
+        props.className,
+      )}
       ref={containerRef}
     >
       <button

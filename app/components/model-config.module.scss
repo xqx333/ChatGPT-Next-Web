@@ -1,5 +1,5 @@
 .select-compress-model {
-  width: 60%;
+  width: min(100%, 360px);
 
   @media screen and (max-width: 600px) {
     width: 100%;

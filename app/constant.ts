@@ -153,6 +153,19 @@ export function isOpenAIImageRequestFormat(requestFormat?: RequestFormat) {
   );
 }
 
+const GEMINI_IMAGE_MODEL_REGEXES = [
+  /gemini-.*flash-image/i,
+  /gemini-.*pro-image/i,
+  /gemini-.*image-preview/i,
+  /gemini-.*image-generation/i,
+  /gemini-.*image/i,
+] as const;
+
+export function isGeminiImageGenerationModel(model?: string) {
+  if (!model) return false;
+  return GEMINI_IMAGE_MODEL_REGEXES.some((regex) => regex.test(model));
+}
+
 export function getServiceProviderForRequestFormat(
   requestFormat: RequestFormat,
 ): ServiceProvider {
@@ -243,7 +256,8 @@ export const Azure = {
 
 export const Google = {
   ExampleEndpoint: "https://generativelanguage.googleapis.com/",
-  ChatPath: (modelName: string) =>
+  ChatPath: (modelName: string) => `v1beta/models/${modelName}:generateContent`,
+  StreamChatPath: (modelName: string) =>
     `v1beta/models/${modelName}:streamGenerateContent`,
 };
 

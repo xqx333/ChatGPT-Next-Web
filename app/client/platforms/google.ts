@@ -1,10 +1,12 @@
-import { Google } from "@/app/constant";
+import { Google, isGeminiImageGenerationModel } from "@/app/constant";
 import {
   ChatOptions,
   getHeaders,
   LLMApi,
   LLMModel,
   LLMUsage,
+  MultimodalContent,
+  RequestMessage,
   SpeechOptions,
 } from "../api";
 import {
@@ -56,31 +58,48 @@ export class GeminiProApi implements LLMApi {
 
     return chatPath;
   }
-  extractMessage(res: any) {
+  extractMessage(res: any): RequestMessage["content"] {
     console.log("[Response] gemini-pro response: ", res);
 
-    const getTextFromParts = (parts: any[]) => {
-      if (!Array.isArray(parts)) return "";
+    const parts = (Array.isArray(res) ? res : [res]).flatMap(
+      (item) => item?.candidates?.at(0)?.content?.parts ?? [],
+    );
 
-      return parts
-        .map((part) => part?.text || "")
-        .filter((text) => text.trim() !== "")
-        .join("\n\n");
-    };
+    const texts = parts
+      .map((part) => part?.text)
+      .filter(
+        (text): text is string =>
+          typeof text === "string" && text.trim().length > 0,
+      );
+    const images = parts
+      .map((part) => {
+        const inlineData = part?.inlineData ?? part?.inline_data;
+        const mimeType =
+          inlineData?.mimeType ?? inlineData?.mime_type ?? "image/png";
+        const data = inlineData?.data;
+        if (!data) return undefined;
+        return `data:${mimeType};base64,${data}`;
+      })
+      .filter((image): image is string => typeof image === "string");
 
-    let content = "";
-    if (Array.isArray(res)) {
-      res.map((item) => {
-        content += getTextFromParts(item?.candidates?.at(0)?.content?.parts);
-      });
+    if (images.length > 0) {
+      const message: MultimodalContent[] = [];
+      if (texts.length > 0) {
+        message.push({
+          type: "text",
+          text: texts.join("\n\n"),
+        });
+      }
+      message.push(
+        ...images.map((image) => ({
+          type: "image_url" as const,
+          image_url: { url: image },
+        })),
+      );
+      return message;
     }
 
-    return (
-      getTextFromParts(res?.candidates?.at(0)?.content?.parts) ||
-      content || //getTextFromParts(res?.at(0)?.candidates?.at(0)?.content?.parts) ||
-      res?.error?.message ||
-      ""
-    );
+    return texts.join("\n\n") || res?.error?.message || "";
   }
   speech(options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
@@ -88,7 +107,9 @@ export class GeminiProApi implements LLMApi {
 
   async chat(options: ChatOptions): Promise<void> {
     const apiClient = this;
-    let multimodal = false;
+    const isImageGenerationModel = isGeminiImageGenerationModel(
+      options.config.model,
+    );
 
     // try get base64image from local cache image_url
     const _messages: ChatOptions["messages"] = [];
@@ -97,28 +118,34 @@ export class GeminiProApi implements LLMApi {
       _messages.push({ role: v.role, content });
     }
     const messages = _messages.map((v) => {
-      let parts: any[] = [{ text: getMessageTextContent(v) }];
-      if (isVisionModel(options.config.model)) {
-        const images = getMessageImages(v);
-        if (images.length > 0) {
-          multimodal = true;
-          parts = parts.concat(
-            images.map((image) => {
-              const imageType = image.split(";")[0].split(":")[1];
-              const imageData = image.split(",")[1];
-              return {
-                inline_data: {
-                  mime_type: imageType,
-                  data: imageData,
-                },
-              };
-            }),
-          );
-        }
+      const textContent = getMessageTextContent(v);
+      const images = isVisionModel(options.config.model)
+        ? getMessageImages(v)
+        : [];
+      const parts: any[] = [];
+
+      if (textContent.trim().length > 0 || images.length === 0) {
+        parts.push({ text: textContent });
       }
+
+      if (images.length > 0) {
+        parts.push(
+          ...images.map((image) => {
+            const imageType = image.split(";")[0].split(":")[1];
+            const imageData = image.split(",")[1];
+            return {
+              inline_data: {
+                mime_type: imageType,
+                data: imageData,
+              },
+            };
+          }),
+        );
+      }
+
       return {
         role: v.role.replace("assistant", "model").replace("system", "user"),
-        parts: parts,
+        parts,
       };
     });
 
@@ -148,7 +175,7 @@ export class GeminiProApi implements LLMApi {
         model: options.config.model,
       },
     };
-    const requestPayload = {
+    const requestPayload: any = {
       contents: messages,
       generationConfig: {
         // stopSequences: [
@@ -179,13 +206,19 @@ export class GeminiProApi implements LLMApi {
       ],
     };
 
-    let shouldStream = !!options.config.stream;
+    if (isImageGenerationModel) {
+      requestPayload.generationConfig.responseModalities = ["TEXT", "IMAGE"];
+    }
+
+    let shouldStream = !!options.config.stream && !isImageGenerationModel;
     const controller = new AbortController();
     options.onController?.(controller);
     try {
       // https://github.com/google-gemini/cookbook/blob/main/quickstarts/rest/Streaming_REST.ipynb
       const chatPath = this.path(
-        Google.ChatPath(modelConfig.model),
+        shouldStream
+          ? Google.StreamChatPath(modelConfig.model)
+          : Google.ChatPath(modelConfig.model),
         shouldStream,
       );
 
@@ -196,7 +229,6 @@ export class GeminiProApi implements LLMApi {
         headers: getHeaders(),
       };
 
-      const isThinking = options.config.model.includes("-thinking");
       // make a fetch request
       const requestTimeoutId = setTimeout(
         () => controller.abort(),

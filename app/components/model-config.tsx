@@ -92,6 +92,7 @@ export function ModelConfigList(props: {
         <SearchSelect
           ariaLabel={Locale.Settings.Model}
           className={styles["select-compress-model"]}
+          compact
           value={value}
           options={modelOptions}
           searchPlaceholder={
