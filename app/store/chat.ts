@@ -573,7 +573,8 @@ export const useChatStore = createPersistStore(
           : shortTermMemoryStartIndex;
         // and if user has cleared history messages, we should exclude the memory too.
         const contextStartIndex = Math.max(clearContextIndex, memoryStartIndex);
-        const maxTokenThreshold = modelConfig.max_tokens;
+        const maxTokenThreshold =
+          modelConfig.max_tokens ?? Number.POSITIVE_INFINITY;
 
         // get recent messages as much as possible
         const reversedRecentMessages = [];
@@ -876,19 +877,6 @@ export const useChatStore = createPersistStore(
           getServiceProviderForRequestFormat(
             session.mask.modelConfig.requestFormat,
           );
-        const config = useAppConfig.getState();
-        session.mask.modelConfig.gptImageSize ??=
-          config.modelConfig.gptImageSize;
-        session.mask.modelConfig.gptImageQuality ??=
-          config.modelConfig.gptImageQuality;
-        session.mask.modelConfig.gptImageBackground ??=
-          config.modelConfig.gptImageBackground;
-        session.mask.modelConfig.gptImageOutputFormat ??=
-          config.modelConfig.gptImageOutputFormat;
-        session.mask.modelConfig.gptImageOutputCompression ??=
-          config.modelConfig.gptImageOutputCompression;
-        session.mask.modelConfig.gptImageModeration ??=
-          config.modelConfig.gptImageModeration;
       });
 
       return newState as any;

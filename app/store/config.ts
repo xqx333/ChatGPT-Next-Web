@@ -8,6 +8,7 @@ import {
   GptImageQuality,
   GptImageSize,
   ModelSize,
+  OpenAIReasoningEffort,
 } from "../typing";
 import { getClientConfig } from "../config/client";
 import {
@@ -188,9 +189,9 @@ export const DEFAULT_CONFIG = {
       RequestFormat.OpenAIChat,
     ) as ServiceProvider,
     requestFormat: RequestFormat.OpenAIChat,
-    temperature: 0.5,
-    top_p: 1,
-    max_tokens: 4000,
+    temperature: undefined as number | undefined,
+    top_p: undefined as number | undefined,
+    max_tokens: undefined as number | undefined,
     presence_penalty: 0,
     frequency_penalty: 0,
     sendMemory: true,
@@ -200,15 +201,16 @@ export const DEFAULT_CONFIG = {
     compressProviderName: "",
     enableInjectSystemPrompts: true,
     template: config?.template ?? DEFAULT_INPUT_TEMPLATE,
-    size: "1024x1024" as ModelSize,
-    quality: "standard" as DalleQuality,
-    style: "vivid" as DalleStyle,
-    gptImageSize: "auto" as GptImageSize,
-    gptImageQuality: "auto" as GptImageQuality,
-    gptImageBackground: "auto" as GptImageBackground,
-    gptImageOutputFormat: "png" as GptImageOutputFormat,
-    gptImageOutputCompression: 100,
-    gptImageModeration: "auto" as GptImageModeration,
+    size: undefined as ModelSize | undefined,
+    quality: undefined as DalleQuality | undefined,
+    style: undefined as DalleStyle | undefined,
+    gptImageSize: undefined as GptImageSize | undefined,
+    gptImageQuality: undefined as GptImageQuality | undefined,
+    gptImageBackground: undefined as GptImageBackground | undefined,
+    gptImageOutputFormat: undefined as GptImageOutputFormat | undefined,
+    gptImageOutputCompression: undefined as number | undefined,
+    gptImageModeration: undefined as GptImageModeration | undefined,
+    reasoningEffort: undefined as OpenAIReasoningEffort | undefined,
   },
 
   ttsConfig: {
@@ -347,7 +349,7 @@ export const useAppConfig = createPersistStore(
   }),
   {
     name: StoreKey.Config,
-    version: 4.4,
+    version: 4.6,
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
@@ -416,37 +418,9 @@ export const useAppConfig = createPersistStore(
           DEFAULT_CONFIG.modelConfig.compressProviderName;
       }
 
-      if (version < 4.3) {
-        state.modelConfig.gptImageSize =
-          DEFAULT_CONFIG.modelConfig.gptImageSize;
-        state.modelConfig.gptImageQuality =
-          DEFAULT_CONFIG.modelConfig.gptImageQuality;
-        state.modelConfig.gptImageBackground =
-          DEFAULT_CONFIG.modelConfig.gptImageBackground;
-        state.modelConfig.gptImageOutputFormat =
-          DEFAULT_CONFIG.modelConfig.gptImageOutputFormat;
-        state.modelConfig.gptImageOutputCompression =
-          DEFAULT_CONFIG.modelConfig.gptImageOutputCompression;
-        state.modelConfig.gptImageModeration =
-          DEFAULT_CONFIG.modelConfig.gptImageModeration;
-      }
-
       if (version < 4.4 || !state.modelCategories?.length) {
         state.modelCategories = DEFAULT_MODEL_CATEGORIES;
       }
-
-      state.modelConfig.gptImageSize ??=
-        DEFAULT_CONFIG.modelConfig.gptImageSize;
-      state.modelConfig.gptImageQuality ??=
-        DEFAULT_CONFIG.modelConfig.gptImageQuality;
-      state.modelConfig.gptImageBackground ??=
-        DEFAULT_CONFIG.modelConfig.gptImageBackground;
-      state.modelConfig.gptImageOutputFormat ??=
-        DEFAULT_CONFIG.modelConfig.gptImageOutputFormat;
-      state.modelConfig.gptImageOutputCompression ??=
-        DEFAULT_CONFIG.modelConfig.gptImageOutputCompression;
-      state.modelConfig.gptImageModeration ??=
-        DEFAULT_CONFIG.modelConfig.gptImageModeration;
       state.modelCategories ??= DEFAULT_MODEL_CATEGORIES;
 
       return state as any;

@@ -37,11 +37,11 @@ import { ChatGPTApi, DalleRequestPayload } from "./openai";
 type GptImageGenerateRequestPayload = {
   model: string;
   prompt: string;
-  size: GptImageSize;
-  quality: GptImageQuality;
-  background: GptImageBackground;
-  output_format: GptImageOutputFormat;
-  moderation: GptImageModeration;
+  size?: GptImageSize;
+  quality?: GptImageQuality;
+  background?: GptImageBackground;
+  output_format?: GptImageOutputFormat;
+  moderation?: GptImageModeration;
   output_compression?: number;
   n: number;
 };
@@ -71,9 +71,9 @@ export class OpenAIImageApi extends ChatGPTApi {
       prompt,
       response_format: "b64_json",
       n: 1,
-      size: options.config.size ?? "1024x1024",
-      quality: options.config.quality ?? "standard",
-      style: options.config.style ?? "vivid",
+      ...(options.config.size ? { size: options.config.size } : {}),
+      ...(options.config.quality ? { quality: options.config.quality } : {}),
+      ...(options.config.style ? { style: options.config.style } : {}),
     };
   }
 
@@ -87,14 +87,26 @@ export class OpenAIImageApi extends ChatGPTApi {
     return {
       model: options.config.model,
       prompt,
-      size: options.config.gptImageSize ?? "auto",
-      quality: options.config.gptImageQuality ?? "auto",
-      background: options.config.gptImageBackground ?? "auto",
-      output_format: outputFormat,
-      moderation: options.config.gptImageModeration ?? "auto",
+      ...(options.config.gptImageSize
+        ? { size: options.config.gptImageSize }
+        : {}),
+      ...(options.config.gptImageQuality
+        ? { quality: options.config.gptImageQuality }
+        : {}),
+      ...(options.config.gptImageBackground
+        ? { background: options.config.gptImageBackground }
+        : {}),
+      ...(options.config.gptImageOutputFormat
+        ? { output_format: options.config.gptImageOutputFormat }
+        : {}),
+      ...(options.config.gptImageModeration
+        ? { moderation: options.config.gptImageModeration }
+        : {}),
       ...(outputFormat === "png"
         ? {}
-        : { output_compression: outputCompression }),
+        : options.config.gptImageOutputCompression !== undefined
+        ? { output_compression: outputCompression }
+        : {}),
       n: 1,
     };
   }
@@ -109,13 +121,26 @@ export class OpenAIImageApi extends ChatGPTApi {
 
     formData.append("model", options.config.model);
     formData.append("prompt", prompt);
-    formData.append("size", options.config.gptImageSize ?? "auto");
-    formData.append("quality", options.config.gptImageQuality ?? "auto");
-    formData.append("background", options.config.gptImageBackground ?? "auto");
-    formData.append("output_format", outputFormat);
-    formData.append("moderation", options.config.gptImageModeration ?? "auto");
+    if (options.config.gptImageSize) {
+      formData.append("size", options.config.gptImageSize);
+    }
+    if (options.config.gptImageQuality) {
+      formData.append("quality", options.config.gptImageQuality);
+    }
+    if (options.config.gptImageBackground) {
+      formData.append("background", options.config.gptImageBackground);
+    }
+    if (options.config.gptImageOutputFormat) {
+      formData.append("output_format", options.config.gptImageOutputFormat);
+    }
+    if (options.config.gptImageModeration) {
+      formData.append("moderation", options.config.gptImageModeration);
+    }
 
-    if (outputFormat !== "png") {
+    if (
+      outputFormat !== "png" &&
+      options.config.gptImageOutputCompression !== undefined
+    ) {
       formData.append(
         "output_compression",
         String(options.config.gptImageOutputCompression ?? 100),
@@ -198,12 +223,12 @@ export class OpenAIImageApi extends ChatGPTApi {
           model: options.config.model,
           prompt,
           imageCount: images.length,
-          size: options.config.gptImageSize ?? "auto",
-          quality: options.config.gptImageQuality ?? "auto",
-          background: options.config.gptImageBackground ?? "auto",
-          output_format: outputFormat,
-          moderation: options.config.gptImageModeration ?? "auto",
-          output_compression: options.config.gptImageOutputCompression ?? 100,
+          size: options.config.gptImageSize,
+          quality: options.config.gptImageQuality,
+          background: options.config.gptImageBackground,
+          output_format: options.config.gptImageOutputFormat,
+          moderation: options.config.gptImageModeration,
+          output_compression: options.config.gptImageOutputCompression,
         });
         chatPath = this.path(OpenaiPath.ImageEditsPath);
         body = requestPayload;
@@ -213,7 +238,7 @@ export class OpenAIImageApi extends ChatGPTApi {
           options,
           prompt,
         );
-        outputFormat = requestPayload.output_format;
+        outputFormat = requestPayload.output_format ?? "png";
         console.log("[Request] openai gpt image payload: ", requestPayload);
         body = JSON.stringify(requestPayload);
         headers = getHeaders();

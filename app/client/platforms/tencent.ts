@@ -43,8 +43,8 @@ interface RequestPayload {
   }[];
   Stream?: boolean;
   Model: string;
-  Temperature: number;
-  TopP: number;
+  Temperature?: number;
+  TopP?: number;
 }
 
 function capitalizeKeys(obj: any): any {

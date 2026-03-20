@@ -642,6 +642,15 @@ const cn = {
       Title: "图片审核",
       SubTitle: "GPT Image 请求的审核严格度",
     },
+    OptionalParam: {
+      Omit: "不传",
+      EmptyPlaceholder: "留空则不发送",
+    },
+    ReasoningEffort: {
+      Title: "思考强度",
+      SubTitle:
+        "仅对 OpenAI Chat / Responses 的思考模型生效，留空时不发送该参数",
+    },
     PresencePenalty: {
       Title: "话题新鲜度 (presence_penalty)",
       SubTitle: "值越大，越有可能扩展到新话题",

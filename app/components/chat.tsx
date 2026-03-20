@@ -557,6 +557,7 @@ export function ChatActions(props: {
   const isDalleImageRequest = isDalleImageRequestFormat(requestFormat);
   const isGptImageRequest = isGptImageRequestFormat(requestFormat);
   const isImageRequest = isDalleImageRequest || isGptImageRequest;
+  const omitLabel = Locale.Settings.OptionalParam.Omit;
   const modelSizes = isDalleImageRequest
     ? ["1024x1024", "1792x1024", "1024x1792"]
     : isGptImageRequest
@@ -582,20 +583,17 @@ export function ChatActions(props: {
     (_, index) => 100 - index * 10,
   );
   const currentSize = isGptImageRequest
-    ? session.mask.modelConfig?.gptImageSize ?? "auto"
-    : session.mask.modelConfig?.size ?? "1024x1024";
+    ? session.mask.modelConfig?.gptImageSize
+    : session.mask.modelConfig?.size;
   const currentQuality = isGptImageRequest
-    ? session.mask.modelConfig?.gptImageQuality ?? "auto"
-    : session.mask.modelConfig?.quality ?? "standard";
-  const currentStyle = session.mask.modelConfig?.style ?? "vivid";
-  const currentBackground =
-    session.mask.modelConfig?.gptImageBackground ?? "auto";
-  const currentOutputFormat =
-    session.mask.modelConfig?.gptImageOutputFormat ?? "png";
+    ? session.mask.modelConfig?.gptImageQuality
+    : session.mask.modelConfig?.quality;
+  const currentStyle = session.mask.modelConfig?.style;
+  const currentBackground = session.mask.modelConfig?.gptImageBackground;
+  const currentOutputFormat = session.mask.modelConfig?.gptImageOutputFormat;
   const currentOutputCompression =
-    session.mask.modelConfig?.gptImageOutputCompression ?? 100;
-  const currentModeration =
-    session.mask.modelConfig?.gptImageModeration ?? "auto";
+    session.mask.modelConfig?.gptImageOutputCompression;
+  const currentModeration = session.mask.modelConfig?.gptImageModeration;
 
   const isMobileScreen = useMobileScreen();
 
@@ -714,7 +712,7 @@ export function ChatActions(props: {
         {isImageRequest && (
           <ChatAction
             onClick={() => setShowSizeSelector(true)}
-            text={currentSize}
+            text={currentSize ?? omitLabel}
             icon={<SizeIcon />}
           />
         )}
@@ -722,22 +720,29 @@ export function ChatActions(props: {
         {isImageRequest && showSizeSelector && (
           <Selector
             defaultSelectedValue={currentSize}
-            items={modelSizes.map((m) => ({
-              title: m,
-              value: m,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...modelSizes.map((m) => ({
+                title: m,
+                value: m,
+              })),
+            ]}
             onClose={() => setShowSizeSelector(false)}
             onSelection={(s) => {
               if (s.length === 0) return;
               const size = s[0];
               chatStore.updateTargetSession(session, (session) => {
                 if (isGptImageRequest) {
-                  session.mask.modelConfig.gptImageSize = size as GptImageSize;
+                  session.mask.modelConfig.gptImageSize = size
+                    ? (size as GptImageSize)
+                    : undefined;
                 } else {
-                  session.mask.modelConfig.size = size as ModelSize;
+                  session.mask.modelConfig.size = size
+                    ? (size as ModelSize)
+                    : undefined;
                 }
               });
-              showToast(size);
+              showToast(size || omitLabel);
             }}
           />
         )}
@@ -745,7 +750,7 @@ export function ChatActions(props: {
         {(isDalleImageRequest || isGptImageRequest) && (
           <ChatAction
             onClick={() => setShowQualitySelector(true)}
-            text={currentQuality}
+            text={currentQuality ?? omitLabel}
             icon={<QualityIcon />}
           />
         )}
@@ -753,26 +758,32 @@ export function ChatActions(props: {
         {(isDalleImageRequest || isGptImageRequest) && showQualitySelector && (
           <Selector
             defaultSelectedValue={currentQuality}
-            items={(isGptImageRequest
-              ? gptImageQualities
-              : dalleImageQualities
-            ).map((m) => ({
-              title: m,
-              value: m,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...(isGptImageRequest
+                ? gptImageQualities
+                : dalleImageQualities
+              ).map((m) => ({
+                title: m,
+                value: m,
+              })),
+            ]}
             onClose={() => setShowQualitySelector(false)}
             onSelection={(q) => {
               if (q.length === 0) return;
               const quality = q[0];
               chatStore.updateTargetSession(session, (session) => {
                 if (isGptImageRequest) {
-                  session.mask.modelConfig.gptImageQuality =
-                    quality as GptImageQuality;
+                  session.mask.modelConfig.gptImageQuality = quality
+                    ? (quality as GptImageQuality)
+                    : undefined;
                 } else {
-                  session.mask.modelConfig.quality = quality as DalleQuality;
+                  session.mask.modelConfig.quality = quality
+                    ? (quality as DalleQuality)
+                    : undefined;
                 }
               });
-              showToast(quality);
+              showToast(quality || omitLabel);
             }}
           />
         )}
@@ -780,7 +791,7 @@ export function ChatActions(props: {
         {isDalleImageRequest && (
           <ChatAction
             onClick={() => setShowStyleSelector(true)}
-            text={currentStyle}
+            text={currentStyle ?? omitLabel}
             icon={<StyleIcon />}
           />
         )}
@@ -788,18 +799,23 @@ export function ChatActions(props: {
         {isDalleImageRequest && showStyleSelector && (
           <Selector
             defaultSelectedValue={currentStyle}
-            items={dalleImageStyles.map((m) => ({
-              title: m,
-              value: m,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...dalleImageStyles.map((m) => ({
+                title: m,
+                value: m,
+              })),
+            ]}
             onClose={() => setShowStyleSelector(false)}
             onSelection={(s) => {
               if (s.length === 0) return;
               const style = s[0];
               chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.style = style;
+                session.mask.modelConfig.style = style
+                  ? (style as DalleStyle)
+                  : undefined;
               });
-              showToast(style);
+              showToast(style || omitLabel);
             }}
           />
         )}
@@ -807,7 +823,7 @@ export function ChatActions(props: {
         {isGptImageRequest && (
           <ChatAction
             onClick={() => setShowBackgroundSelector(true)}
-            text={currentBackground}
+            text={currentBackground ?? omitLabel}
             icon={<MaskIcon />}
           />
         )}
@@ -815,18 +831,23 @@ export function ChatActions(props: {
         {isGptImageRequest && showBackgroundSelector && (
           <Selector
             defaultSelectedValue={currentBackground}
-            items={gptImageBackgrounds.map((background) => ({
-              title: background,
-              value: background,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...gptImageBackgrounds.map((background) => ({
+                title: background,
+                value: background,
+              })),
+            ]}
             onClose={() => setShowBackgroundSelector(false)}
             onSelection={(values) => {
               if (values.length === 0) return;
-              const background = values[0] as GptImageBackground;
+              const background = values[0];
               chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.gptImageBackground = background;
+                session.mask.modelConfig.gptImageBackground = background
+                  ? (background as GptImageBackground)
+                  : undefined;
               });
-              showToast(background);
+              showToast(background || omitLabel);
             }}
           />
         )}
@@ -834,7 +855,7 @@ export function ChatActions(props: {
         {isGptImageRequest && (
           <ChatAction
             onClick={() => setShowOutputFormatSelector(true)}
-            text={currentOutputFormat}
+            text={currentOutputFormat ?? omitLabel}
             icon={<ConfigIcon />}
           />
         )}
@@ -842,18 +863,23 @@ export function ChatActions(props: {
         {isGptImageRequest && showOutputFormatSelector && (
           <Selector
             defaultSelectedValue={currentOutputFormat}
-            items={gptImageOutputFormats.map((format) => ({
-              title: format,
-              value: format,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...gptImageOutputFormats.map((format) => ({
+                title: format,
+                value: format,
+              })),
+            ]}
             onClose={() => setShowOutputFormatSelector(false)}
             onSelection={(values) => {
               if (values.length === 0) return;
-              const outputFormat = values[0] as GptImageOutputFormat;
+              const outputFormat = values[0];
               chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.gptImageOutputFormat = outputFormat;
+                session.mask.modelConfig.gptImageOutputFormat = outputFormat
+                  ? (outputFormat as GptImageOutputFormat)
+                  : undefined;
               });
-              showToast(outputFormat);
+              showToast(outputFormat || omitLabel);
             }}
           />
         )}
@@ -861,27 +887,39 @@ export function ChatActions(props: {
         {isGptImageRequest && (
           <ChatAction
             onClick={() => setShowOutputCompressionSelector(true)}
-            text={`${currentOutputCompression}%`}
+            text={
+              typeof currentOutputCompression === "number"
+                ? `${currentOutputCompression}%`
+                : omitLabel
+            }
             icon={<SettingsIcon />}
           />
         )}
 
         {isGptImageRequest && showOutputCompressionSelector && (
           <Selector
-            defaultSelectedValue={String(currentOutputCompression)}
-            items={gptImageOutputCompressions.map((compression) => ({
-              title: `${compression}%`,
-              value: String(compression),
-            }))}
+            defaultSelectedValue={
+              currentOutputCompression === undefined
+                ? ""
+                : String(currentOutputCompression)
+            }
+            items={[
+              { title: omitLabel, value: "" },
+              ...gptImageOutputCompressions.map((compression) => ({
+                title: `${compression}%`,
+                value: String(compression),
+              })),
+            ]}
             onClose={() => setShowOutputCompressionSelector(false)}
             onSelection={(values) => {
               if (values.length === 0) return;
-              const compression = Number(values[0]);
+              const compression = values[0];
               chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.gptImageOutputCompression =
-                  compression;
+                session.mask.modelConfig.gptImageOutputCompression = compression
+                  ? Number(compression)
+                  : undefined;
               });
-              showToast(`${compression}%`);
+              showToast(compression ? `${compression}%` : omitLabel);
             }}
           />
         )}
@@ -889,7 +927,7 @@ export function ChatActions(props: {
         {isGptImageRequest && (
           <ChatAction
             onClick={() => setShowModerationSelector(true)}
-            text={currentModeration}
+            text={currentModeration ?? omitLabel}
             icon={<EyeIcon />}
           />
         )}
@@ -897,18 +935,23 @@ export function ChatActions(props: {
         {isGptImageRequest && showModerationSelector && (
           <Selector
             defaultSelectedValue={currentModeration}
-            items={gptImageModerations.map((moderation) => ({
-              title: moderation,
-              value: moderation,
-            }))}
+            items={[
+              { title: omitLabel, value: "" },
+              ...gptImageModerations.map((moderation) => ({
+                title: moderation,
+                value: moderation,
+              })),
+            ]}
             onClose={() => setShowModerationSelector(false)}
             onSelection={(values) => {
               if (values.length === 0) return;
-              const moderation = values[0] as GptImageModeration;
+              const moderation = values[0];
               chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.gptImageModeration = moderation;
+                session.mask.modelConfig.gptImageModeration = moderation
+                  ? (moderation as GptImageModeration)
+                  : undefined;
               });
-              showToast(moderation);
+              showToast(moderation || omitLabel);
             }}
           />
         )}

@@ -16,6 +16,13 @@ export type GptImageQuality = "auto" | "low" | "medium" | "high";
 export type GptImageBackground = "auto" | "transparent" | "opaque";
 export type GptImageOutputFormat = "png" | "jpeg" | "webp";
 export type GptImageModeration = "auto" | "low";
+export type OpenAIReasoningEffort =
+  | "none"
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh";
 
 export type ModelSize =
   | "1024x1024"

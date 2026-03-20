@@ -649,6 +649,15 @@ const en: LocaleType = {
       Title: "Image Moderation",
       SubTitle: "Moderation strictness for GPT Image requests",
     },
+    OptionalParam: {
+      Omit: "Omit",
+      EmptyPlaceholder: "Leave empty to omit",
+    },
+    ReasoningEffort: {
+      Title: "Reasoning Effort",
+      SubTitle:
+        "Only applies to OpenAI Chat / Responses reasoning models; leave empty to omit",
+    },
     PresencePenalty: {
       Title: "Presence Penalty",
       SubTitle:

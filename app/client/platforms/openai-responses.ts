@@ -20,6 +20,7 @@ import {
   SpeechOptions,
 } from "../api";
 import { ChatGPTApi } from "./openai";
+import { OpenAIReasoningEffort } from "@/app/typing";
 
 type ResponsesInputContent =
   | {
@@ -65,6 +66,9 @@ type ResponsesRequestPayload = {
   top_p?: number;
   max_output_tokens?: number;
   previous_response_id?: string;
+  reasoning?: {
+    effort: OpenAIReasoningEffort;
+  };
 };
 
 function extractOutputTextFromResponse(res: any): string {
@@ -152,6 +156,12 @@ export class OpenAIResponsesApi extends ChatGPTApi {
       top_p: modelConfig.top_p,
       max_output_tokens: modelConfig.max_tokens,
     };
+
+    if (modelConfig.reasoningEffort) {
+      requestPayload.reasoning = {
+        effort: modelConfig.reasoningEffort,
+      };
+    }
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();

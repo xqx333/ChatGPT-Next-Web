@@ -17,6 +17,7 @@ import {
   GptImageOutputFormat,
   GptImageQuality,
   GptImageSize,
+  OpenAIReasoningEffort,
 } from "../typing";
 
 import Locale from "../locales";
@@ -54,6 +55,10 @@ export function ModelConfigList(props: {
   const isDalleImageRequest = isDalleImageRequestFormat(requestFormat);
   const isGptImageRequest = isGptImageRequestFormat(requestFormat);
   const isImageRequest = isOpenAIImageRequestFormat(requestFormat);
+  const supportsReasoningEffort =
+    requestFormat === RequestFormat.OpenAIChat ||
+    requestFormat === RequestFormat.OpenAIResponses;
+  const omitLabel = Locale.Settings.OptionalParam.Omit;
   const dalleSizes = ["1024x1024", "1792x1024", "1024x1792"] as const;
   const dalleQualities: DalleQuality[] = ["standard", "hd"];
   const dalleStyles: DalleStyle[] = ["vivid", "natural"];
@@ -76,6 +81,14 @@ export function ModelConfigList(props: {
   ];
   const gptImageOutputFormats: GptImageOutputFormat[] = ["png", "jpeg", "webp"];
   const gptImageModerations: GptImageModeration[] = ["auto", "low"];
+  const reasoningEfforts: OpenAIReasoningEffort[] = [
+    "none",
+    "minimal",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+  ];
   const modelOptions = useMemo(
     () =>
       models.map((model) => ({
@@ -142,13 +155,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageSize.Title}
-              value={props.modelConfig.size ?? "1024x1024"}
+              value={props.modelConfig.size ?? ""}
               onChange={(e) =>
                 props.updateConfig(
-                  (config) => (config.size = e.currentTarget.value as any),
+                  (config) =>
+                    (config.size = e.currentTarget.value
+                      ? (e.currentTarget.value as any)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {dalleSizes.map((size) => (
                 <option value={size} key={size}>
                   {size}
@@ -163,13 +180,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageQuality.Title}
-              value={props.modelConfig.quality ?? "standard"}
+              value={props.modelConfig.quality ?? ""}
               onChange={(e) =>
                 props.updateConfig(
-                  (config) => (config.quality = e.currentTarget.value as any),
+                  (config) =>
+                    (config.quality = e.currentTarget.value
+                      ? (e.currentTarget.value as any)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {dalleQualities.map((quality) => (
                 <option value={quality} key={quality}>
                   {quality}
@@ -184,13 +205,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageStyle.Title}
-              value={props.modelConfig.style ?? "vivid"}
+              value={props.modelConfig.style ?? ""}
               onChange={(e) =>
                 props.updateConfig(
-                  (config) => (config.style = e.currentTarget.value as any),
+                  (config) =>
+                    (config.style = e.currentTarget.value
+                      ? (e.currentTarget.value as any)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {dalleStyles.map((style) => (
                 <option value={style} key={style}>
                   {style}
@@ -208,15 +233,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageSize.Title}
-              value={props.modelConfig.gptImageSize ?? "auto"}
+              value={props.modelConfig.gptImageSize ?? ""}
               onChange={(e) =>
                 props.updateConfig(
                   (config) =>
-                    (config.gptImageSize = e.currentTarget
-                      .value as GptImageSize),
+                    (config.gptImageSize = e.currentTarget.value
+                      ? (e.currentTarget.value as GptImageSize)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {gptImageSizes.map((size) => (
                 <option value={size} key={size}>
                   {size}
@@ -231,15 +258,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageQuality.Title}
-              value={props.modelConfig.gptImageQuality ?? "auto"}
+              value={props.modelConfig.gptImageQuality ?? ""}
               onChange={(e) =>
                 props.updateConfig(
                   (config) =>
-                    (config.gptImageQuality = e.currentTarget
-                      .value as GptImageQuality),
+                    (config.gptImageQuality = e.currentTarget.value
+                      ? (e.currentTarget.value as GptImageQuality)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {gptImageQualities.map((quality) => (
                 <option value={quality} key={quality}>
                   {quality}
@@ -254,15 +283,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageBackground.Title}
-              value={props.modelConfig.gptImageBackground ?? "auto"}
+              value={props.modelConfig.gptImageBackground ?? ""}
               onChange={(e) =>
                 props.updateConfig(
                   (config) =>
-                    (config.gptImageBackground = e.currentTarget
-                      .value as GptImageBackground),
+                    (config.gptImageBackground = e.currentTarget.value
+                      ? (e.currentTarget.value as GptImageBackground)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {gptImageBackgrounds.map((background) => (
                 <option value={background} key={background}>
                   {background}
@@ -277,15 +308,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageOutputFormat.Title}
-              value={props.modelConfig.gptImageOutputFormat ?? "png"}
+              value={props.modelConfig.gptImageOutputFormat ?? ""}
               onChange={(e) =>
                 props.updateConfig(
                   (config) =>
-                    (config.gptImageOutputFormat = e.currentTarget
-                      .value as GptImageOutputFormat),
+                    (config.gptImageOutputFormat = e.currentTarget.value
+                      ? (e.currentTarget.value as GptImageOutputFormat)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {gptImageOutputFormats.map((format) => (
                 <option value={format} key={format}>
                   {format}
@@ -298,23 +331,24 @@ export function ModelConfigList(props: {
             title={Locale.Settings.ImageOutputCompression.Title}
             subTitle={Locale.Settings.ImageOutputCompression.SubTitle}
           >
-            <InputRange
-              aria={Locale.Settings.ImageOutputCompression.Title}
-              title={`${props.modelConfig.gptImageOutputCompression ?? 100}%`}
-              value={props.modelConfig.gptImageOutputCompression ?? 100}
-              min="0"
-              max="100"
+            <input
+              aria-label={Locale.Settings.ImageOutputCompression.Title}
+              type="number"
+              min={0}
+              max={100}
               step="10"
+              placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+              value={props.modelConfig.gptImageOutputCompression ?? ""}
               onChange={(e) =>
-                props.updateConfig(
-                  (config) =>
-                    (config.gptImageOutputCompression =
-                      ModalConfigValidator.gptImageOutputCompression(
+                props.updateConfig((config) => {
+                  config.gptImageOutputCompression = e.currentTarget.value
+                    ? ModalConfigValidator.gptImageOutputCompression(
                         e.currentTarget.valueAsNumber,
-                      )),
-                )
+                      )
+                    : undefined;
+                })
               }
-            ></InputRange>
+            ></input>
           </ListItem>
 
           <ListItem
@@ -323,15 +357,17 @@ export function ModelConfigList(props: {
           >
             <Select
               aria-label={Locale.Settings.ImageModeration.Title}
-              value={props.modelConfig.gptImageModeration ?? "auto"}
+              value={props.modelConfig.gptImageModeration ?? ""}
               onChange={(e) =>
                 props.updateConfig(
                   (config) =>
-                    (config.gptImageModeration = e.currentTarget
-                      .value as GptImageModeration),
+                    (config.gptImageModeration = e.currentTarget.value
+                      ? (e.currentTarget.value as GptImageModeration)
+                      : undefined),
                 )
               }
             >
+              <option value="">{omitLabel}</option>
               {gptImageModerations.map((moderation) => (
                 <option value={moderation} key={moderation}>
                   {moderation}
@@ -343,45 +379,74 @@ export function ModelConfigList(props: {
       )}
       {!isImageRequest && (
         <>
+          {supportsReasoningEffort && (
+            <ListItem
+              title={Locale.Settings.ReasoningEffort.Title}
+              subTitle={Locale.Settings.ReasoningEffort.SubTitle}
+            >
+              <Select
+                aria-label={Locale.Settings.ReasoningEffort.Title}
+                value={props.modelConfig.reasoningEffort ?? ""}
+                onChange={(e) =>
+                  props.updateConfig((config) => {
+                    config.reasoningEffort = e.currentTarget.value
+                      ? (e.currentTarget.value as OpenAIReasoningEffort)
+                      : undefined;
+                  })
+                }
+              >
+                <option value="">{omitLabel}</option>
+                {reasoningEfforts.map((effort) => (
+                  <option value={effort} key={effort}>
+                    {effort}
+                  </option>
+                ))}
+              </Select>
+            </ListItem>
+          )}
           <ListItem
             title={Locale.Settings.Temperature.Title}
             subTitle={Locale.Settings.Temperature.SubTitle}
           >
-            <InputRange
-              aria={Locale.Settings.Temperature.Title}
-              value={props.modelConfig.temperature?.toFixed(1)}
-              min="0"
-              max="1" // lets limit it to 0-1
+            <input
+              aria-label={Locale.Settings.Temperature.Title}
+              type="number"
+              min={0}
+              max={1}
               step="0.1"
-              onChange={(e) => {
-                props.updateConfig(
-                  (config) =>
-                    (config.temperature = ModalConfigValidator.temperature(
-                      e.currentTarget.valueAsNumber,
-                    )),
-                );
-              }}
-            ></InputRange>
+              placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+              value={props.modelConfig.temperature ?? ""}
+              onChange={(e) =>
+                props.updateConfig((config) => {
+                  config.temperature = e.currentTarget.value
+                    ? ModalConfigValidator.temperature(
+                        e.currentTarget.valueAsNumber,
+                      )
+                    : undefined;
+                })
+              }
+            ></input>
           </ListItem>
           <ListItem
             title={Locale.Settings.TopP.Title}
             subTitle={Locale.Settings.TopP.SubTitle}
           >
-            <InputRange
-              aria={Locale.Settings.TopP.Title}
-              value={(props.modelConfig.top_p ?? 1).toFixed(1)}
-              min="0"
-              max="1"
+            <input
+              aria-label={Locale.Settings.TopP.Title}
+              type="number"
+              min={0}
+              max={1}
               step="0.1"
-              onChange={(e) => {
-                props.updateConfig(
-                  (config) =>
-                    (config.top_p = ModalConfigValidator.top_p(
-                      e.currentTarget.valueAsNumber,
-                    )),
-                );
-              }}
-            ></InputRange>
+              placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+              value={props.modelConfig.top_p ?? ""}
+              onChange={(e) =>
+                props.updateConfig((config) => {
+                  config.top_p = e.currentTarget.value
+                    ? ModalConfigValidator.top_p(e.currentTarget.valueAsNumber)
+                    : undefined;
+                })
+              }
+            ></input>
           </ListItem>
           <ListItem
             title={Locale.Settings.MaxTokens.Title}
@@ -392,14 +457,16 @@ export function ModelConfigList(props: {
               type="number"
               min={1024}
               max={512000}
-              value={props.modelConfig.max_tokens}
+              placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+              value={props.modelConfig.max_tokens ?? ""}
               onChange={(e) =>
-                props.updateConfig(
-                  (config) =>
-                    (config.max_tokens = ModalConfigValidator.max_tokens(
-                      e.currentTarget.valueAsNumber,
-                    )),
-                )
+                props.updateConfig((config) => {
+                  config.max_tokens = e.currentTarget.value
+                    ? ModalConfigValidator.max_tokens(
+                        e.currentTarget.valueAsNumber,
+                      )
+                    : undefined;
+                })
               }
             ></input>
           </ListItem>

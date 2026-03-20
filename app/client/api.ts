@@ -33,6 +33,7 @@ import {
   GptImageOutputFormat,
   GptImageQuality,
   GptImageSize,
+  OpenAIReasoningEffort,
 } from "../typing";
 
 export const ROLES = ["system", "user", "assistant"] as const;
@@ -78,6 +79,7 @@ export interface LLMConfig {
   gptImageOutputFormat?: GptImageOutputFormat;
   gptImageOutputCompression?: number;
   gptImageModeration?: GptImageModeration;
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 export interface SpeechOptions {

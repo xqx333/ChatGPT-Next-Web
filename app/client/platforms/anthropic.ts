@@ -32,7 +32,7 @@ export type AnthropicMessage = {
 export interface AnthropicChatRequest {
   model: string; // The model that will complete your prompt.
   messages: AnthropicMessage[]; // The prompt that you want Claude to complete.
-  max_tokens: number; // The maximum number of tokens to generate before stopping.
+  max_tokens?: number; // The maximum number of tokens to generate before stopping.
   stop_sequences?: string[]; // Sequences that will cause the model to stop generating completion text.
   temperature?: number; // Amount of randomness injected into the response.
   top_p?: number; // Use nucleus sampling.
@@ -44,7 +44,7 @@ export interface AnthropicChatRequest {
 export interface ChatRequest {
   model: string; // The model that will complete your prompt.
   prompt: string; // The prompt that you want Claude to complete.
-  max_tokens_to_sample: number; // The maximum number of tokens to generate before stopping.
+  max_tokens_to_sample?: number; // The maximum number of tokens to generate before stopping.
   stop_sequences?: string[]; // Sequences that will cause the model to stop generating completion text.
   temperature?: number; // Amount of randomness injected into the response.
   top_p?: number; // Use nucleus sampling.

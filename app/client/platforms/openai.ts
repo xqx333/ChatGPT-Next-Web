@@ -24,6 +24,7 @@ import {
 } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
 import { ModelSize, DalleQuality, DalleStyle } from "@/app/typing";
+import { OpenAIReasoningEffort } from "@/app/typing";
 
 import {
   ChatOptions,
@@ -58,12 +59,13 @@ export interface RequestPayload {
   }[];
   stream?: boolean;
   model: string;
-  temperature: number;
+  temperature?: number;
   presence_penalty: number;
   frequency_penalty: number;
-  top_p: number;
+  top_p?: number;
   max_tokens?: number;
   max_completion_tokens?: number;
+  reasoning_effort?: OpenAIReasoningEffort;
 }
 
 export interface DalleRequestPayload {
@@ -71,9 +73,9 @@ export interface DalleRequestPayload {
   prompt: string;
   response_format: "url" | "b64_json";
   n: number;
-  size: ModelSize;
-  quality: DalleQuality;
-  style: DalleStyle;
+  size?: ModelSize;
+  quality?: DalleQuality;
+  style?: DalleStyle;
 }
 
 export class ChatGPTApi implements LLMApi {
@@ -208,10 +210,10 @@ export class ChatGPTApi implements LLMApi {
       messages,
       stream: options.config.stream,
       model: modelConfig.model,
-      temperature: !isO1OrO3 ? modelConfig.temperature : 1,
+      temperature: !isO1OrO3 ? modelConfig.temperature : undefined,
       presence_penalty: !isO1OrO3 ? modelConfig.presence_penalty : 0,
       frequency_penalty: !isO1OrO3 ? modelConfig.frequency_penalty : 0,
-      top_p: !isO1OrO3 ? modelConfig.top_p : 1,
+      top_p: !isO1OrO3 ? modelConfig.top_p : undefined,
       // max_tokens: Math.max(modelConfig.max_tokens, 1024),
       // Please do not ask me why not send max_tokens, no reason, this param is just shit, I dont want to explain anymore.
     };
@@ -226,11 +228,17 @@ export class ChatGPTApi implements LLMApi {
       });
 
       // o1/o3 uses max_completion_tokens to control the number of tokens (https://platform.openai.com/docs/guides/reasoning#controlling-costs)
-      requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
+      if (modelConfig.max_tokens !== undefined) {
+        requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
+      }
+    }
+
+    if (modelConfig.reasoningEffort) {
+      requestPayload.reasoning_effort = modelConfig.reasoningEffort;
     }
 
     // add max_tokens to vision model
-    if (visionModel && !isO1OrO3) {
+    if (visionModel && !isO1OrO3 && modelConfig.max_tokens !== undefined) {
       requestPayload["max_tokens"] = Math.max(modelConfig.max_tokens, 4000);
     }
 
