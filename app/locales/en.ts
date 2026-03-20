@@ -562,15 +562,23 @@ const en: LocaleType = {
           TestAllSummary(success: number, total: number) {
             return `Testing finished: ${success}/${total} models passed`;
           },
+          EditCategories: "Edit Categories",
           SelectAll: "Select All",
           ClearAll: "Clear All",
           Empty: "No matching models",
           CustomOnly: "Manual",
           Filter: {
             All: "All",
-            Enabled: "Enabled",
-            Disabled: "Hidden",
           },
+        },
+        CategoryModal: {
+          Title: "Edit Model Categories",
+          Edit: "Edit",
+          Close: "Close",
+          ResetDefault: "Restore Defaults",
+          NamePlaceholder: "Category name",
+          MatcherPlaceholder: "Match keywords, separated by | or commas",
+          MatcherPrefix: "Match: ",
         },
       },
       Google: {

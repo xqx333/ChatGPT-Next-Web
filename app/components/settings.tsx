@@ -2078,6 +2078,7 @@ export function Settings() {
             <CustomModelManager
               models={config.models}
               customModels={config.customModels}
+              modelCategories={config.modelCategories}
               defaultModel={accessStore.defaultModel}
               endpoint={customModelAccess.endpoint}
               apiKey={customModelAccess.apiKey}
@@ -2088,6 +2089,11 @@ export function Settings() {
               anthropicApiVersion={accessStore.anthropicApiVersion}
               onChangeCustomModels={(customModels) =>
                 config.update((config) => (config.customModels = customModels))
+              }
+              onChangeModelCategories={(modelCategories) =>
+                config.update(
+                  (config) => (config.modelCategories = modelCategories),
+                )
               }
               onMergeModels={(models) => config.mergeModels(models)}
             />

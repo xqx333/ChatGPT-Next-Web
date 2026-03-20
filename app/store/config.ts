@@ -34,6 +34,112 @@ export type TTSModelType = (typeof DEFAULT_TTS_MODELS)[number];
 export type TTSVoiceType = (typeof DEFAULT_TTS_VOICES)[number];
 export type TTSEngineType = (typeof DEFAULT_TTS_ENGINES)[number];
 
+export type ModelCategory = {
+  id: string;
+  label: string;
+  matchers: string;
+  avatarModel: string;
+};
+
+export const DEFAULT_MODEL_CATEGORIES: ModelCategory[] = [
+  {
+    id: "chatgpt",
+    label: "ChatGPT",
+    matchers: "gpt|chatgpt|o1|o3|o4",
+    avatarModel: "gpt-4o",
+  },
+  {
+    id: "claude",
+    label: "Claude",
+    matchers: "claude",
+    avatarModel: "claude-3-5-sonnet",
+  },
+  {
+    id: "cohere",
+    label: "Cohere",
+    matchers: "cohere|command",
+    avatarModel: "cohere",
+  },
+  {
+    id: "comfyui",
+    label: "ComfyUI",
+    matchers: "comfyui",
+    avatarModel: "comfyui",
+  },
+  {
+    id: "dalle",
+    label: "DALL-E",
+    matchers: "dall-e|dalle|gpt-image",
+    avatarModel: "dall-e-3",
+  },
+  {
+    id: "deepseek",
+    label: "DeepSeek",
+    matchers: "deepseek",
+    avatarModel: "deepseek-chat",
+  },
+  {
+    id: "doubao",
+    label: "DouBao",
+    matchers: "doubao|seedream|seedance|ep-",
+    avatarModel: "doubao-pro",
+  },
+  {
+    id: "flux",
+    label: "Flux",
+    matchers: "flux",
+    avatarModel: "flux-1",
+  },
+  {
+    id: "gemini",
+    label: "Gemini",
+    matchers: "gemini|gemma|palm",
+    avatarModel: "gemini-1.5-pro",
+  },
+  {
+    id: "glm",
+    label: "GLM",
+    matchers: "glm|cogview|cogvideox",
+    avatarModel: "glm-4",
+  },
+  {
+    id: "grok",
+    label: "Grok",
+    matchers: "grok",
+    avatarModel: "grok-2",
+  },
+  {
+    id: "llama",
+    label: "Llama",
+    matchers: "llama",
+    avatarModel: "llama-3.1",
+  },
+  {
+    id: "mistral",
+    label: "Mistral",
+    matchers: "mistral|mixtral|codestral",
+    avatarModel: "mistral-large",
+  },
+  {
+    id: "moonshot",
+    label: "MoonShot",
+    matchers: "moonshot|kimi",
+    avatarModel: "moonshot-v1-8k",
+  },
+  {
+    id: "qwen",
+    label: "Qwen",
+    matchers: "qwen|qwq",
+    avatarModel: "qwen-max",
+  },
+  {
+    id: "other",
+    label: "其他",
+    matchers: "",
+    avatarModel: "default",
+  },
+];
+
 export enum SubmitKey {
   Enter = "Enter",
   CtrlEnter = "Ctrl + Enter",
@@ -73,6 +179,7 @@ export const DEFAULT_CONFIG = {
   hideBuiltinMasks: false, // dont add builtin masks
 
   customModels: "",
+  modelCategories: DEFAULT_MODEL_CATEGORIES,
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
@@ -240,7 +347,7 @@ export const useAppConfig = createPersistStore(
   }),
   {
     name: StoreKey.Config,
-    version: 4.3,
+    version: 4.4,
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
@@ -324,6 +431,10 @@ export const useAppConfig = createPersistStore(
           DEFAULT_CONFIG.modelConfig.gptImageModeration;
       }
 
+      if (version < 4.4 || !state.modelCategories?.length) {
+        state.modelCategories = DEFAULT_MODEL_CATEGORIES;
+      }
+
       state.modelConfig.gptImageSize ??=
         DEFAULT_CONFIG.modelConfig.gptImageSize;
       state.modelConfig.gptImageQuality ??=
@@ -336,6 +447,7 @@ export const useAppConfig = createPersistStore(
         DEFAULT_CONFIG.modelConfig.gptImageOutputCompression;
       state.modelConfig.gptImageModeration ??=
         DEFAULT_CONFIG.modelConfig.gptImageModeration;
+      state.modelCategories ??= DEFAULT_MODEL_CATEGORIES;
 
       return state as any;
     },

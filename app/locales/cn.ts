@@ -576,15 +576,23 @@ const cn = {
           TestAllSummary(success: number, total: number) {
             return `测试完成 ${success}/${total} 个模型可用`;
           },
+          EditCategories: "编辑模型类别",
           SelectAll: "全选",
           ClearAll: "全不选",
           Empty: "没有匹配的模型",
           CustomOnly: "手动添加",
           Filter: {
             All: "全部",
-            Enabled: "已启用",
-            Disabled: "已隐藏",
           },
+        },
+        CategoryModal: {
+          Title: "编辑模型类别",
+          Edit: "编辑",
+          Close: "关闭",
+          ResetDefault: "恢复默认",
+          NamePlaceholder: "类别名称",
+          MatcherPlaceholder: "匹配关键词，支持 | 或逗号分隔",
+          MatcherPrefix: "匹配: ",
         },
       },
     },
