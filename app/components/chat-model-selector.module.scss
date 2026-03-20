@@ -19,7 +19,8 @@
 }
 
 .model-selector-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
   padding: 24px 28px;
@@ -37,16 +38,15 @@
 }
 
 .model-selector-toolbar {
-  flex: 1;
   min-width: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
 
 .model-selector-search-wrap {
-  flex: 1;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .model-selector-search {
@@ -259,13 +259,13 @@
 
 @media only screen and (max-width: 900px) {
   .model-selector-header {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: flex-start;
   }
 
   .model-selector-toolbar {
     width: 100%;
-    order: 3;
+    grid-column: 1 / -1;
   }
 
   .model-selector-actions {
