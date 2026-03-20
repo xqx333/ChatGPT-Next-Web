@@ -101,6 +101,30 @@ export class GeminiProApi implements LLMApi {
 
     return texts.join("\n\n") || res?.error?.message || "";
   }
+
+  private buildMultimodalMessage(
+    text: string,
+    images: string[],
+  ): RequestMessage["content"] {
+    if (images.length === 0) {
+      return text;
+    }
+
+    const message: MultimodalContent[] = [];
+    if (text.trim().length > 0) {
+      message.push({
+        type: "text",
+        text,
+      });
+    }
+    message.push(
+      ...images.map((image) => ({
+        type: "image_url" as const,
+        image_url: { url: image },
+      })),
+    );
+    return message;
+  }
   speech(options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
   }
@@ -210,7 +234,7 @@ export class GeminiProApi implements LLMApi {
       requestPayload.generationConfig.responseModalities = ["TEXT", "IMAGE"];
     }
 
-    let shouldStream = !!options.config.stream && !isImageGenerationModel;
+    let shouldStream = !!options.config.stream;
     const controller = new AbortController();
     options.onController?.(controller);
     try {
@@ -236,11 +260,16 @@ export class GeminiProApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
+        const [tools, funcs] = isImageGenerationModel
+          ? [[], {} as Record<string, Function>]
+          : usePluginStore
+              .getState()
+              .getAsTools(
+                useChatStore.getState().currentSession().mask?.plugin || [],
+              );
+        const streamedImages: string[] = [];
+        const seenImages = new Set<string>();
+
         return stream(
           chatPath,
           requestPayload,
@@ -256,24 +285,47 @@ export class GeminiProApi implements LLMApi {
           (text: string, runTools: ChatMessageTool[]) => {
             // console.log("parseSSE", text, runTools);
             const chunkJson = JSON.parse(text);
+            const parts = chunkJson?.candidates?.at(0)?.content?.parts ?? [];
 
-            const functionCall = chunkJson?.candidates
-              ?.at(0)
-              ?.content.parts.at(0)?.functionCall;
+            const functionCall = parts.find(
+              (part: { functionCall?: unknown }) => !!part?.functionCall,
+            )?.functionCall as
+              | {
+                  name?: string;
+                  args?: Record<string, unknown>;
+                }
+              | undefined;
             if (functionCall) {
               const { name, args } = functionCall;
-              runTools.push({
-                id: nanoid(),
-                type: "function",
-                function: {
-                  name,
-                  arguments: JSON.stringify(args), // utils.chat call function, using JSON.parse
-                },
-              });
+              if (name) {
+                runTools.push({
+                  id: nanoid(),
+                  type: "function",
+                  function: {
+                    name,
+                    arguments: JSON.stringify(args), // utils.chat call function, using JSON.parse
+                  },
+                });
+              }
             }
-            return chunkJson?.candidates
-              ?.at(0)
-              ?.content.parts?.map((part: { text: string }) => part.text)
+
+            parts.forEach((part: any) => {
+              const inlineData = part?.inlineData ?? part?.inline_data;
+              const mimeType =
+                inlineData?.mimeType ?? inlineData?.mime_type ?? "image/png";
+              const data = inlineData?.data;
+              if (!data) return;
+
+              const image = `data:${mimeType};base64,${data}`;
+              if (!seenImages.has(image)) {
+                seenImages.add(image);
+                streamedImages.push(image);
+              }
+            });
+
+            return parts
+              .map((part: { text?: string }) => part.text ?? "")
+              .filter((part: string) => part.length > 0)
               .join("\n\n");
           },
           // processToolMessage, include tool_calls message and tool call results
@@ -315,7 +367,23 @@ export class GeminiProApi implements LLMApi {
               })),
             );
           },
-          options,
+          {
+            ...options,
+            buildFinalMessage: (message: string) =>
+              this.buildMultimodalMessage(message, streamedImages),
+            hasFinalContent: (message: string) =>
+              streamedImages.length > 0 || message.trim().length > 0,
+            onFinish: (
+              message: RequestMessage["content"],
+              responseRes: Response,
+            ) => {
+              const finalMessage =
+                typeof message === "string"
+                  ? this.buildMultimodalMessage(message, streamedImages)
+                  : message;
+              options.onFinish(finalMessage, responseRes);
+            },
+          },
         );
       } else {
         const res = await fetch(chatPath, chatPayload);

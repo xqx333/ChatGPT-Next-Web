@@ -193,13 +193,26 @@ export function stream(
   let running = false;
   let runTools: any[] = [];
   let responseRes: Response;
+  const buildFinalMessage = () =>
+    options.buildFinalMessage?.(responseText + remainText, responseRes) ??
+    responseText + remainText;
+  const hasFinalContent = () => {
+    const finalMessage = buildFinalMessage();
+    if (typeof finalMessage === "string") {
+      return finalMessage.trim().length > 0;
+    }
+    if (Array.isArray(finalMessage)) {
+      return finalMessage.length > 0;
+    }
+    return Boolean(options.hasFinalContent?.(responseText + remainText));
+  };
 
   // animate response to make it looks smooth
   function animateResponseText() {
     if (finished || controller.signal.aborted) {
       responseText += remainText;
       console.log("[Response Animation] finished");
-      if (responseText?.length === 0) {
+      if (!hasFinalContent()) {
         options.onError?.(new Error("empty response from server"));
       }
       return;

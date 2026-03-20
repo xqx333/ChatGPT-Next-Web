@@ -99,6 +99,11 @@ export interface ChatOptions {
   onController?: (controller: AbortController) => void;
   onBeforeTool?: (tool: ChatMessageTool) => void;
   onAfterTool?: (tool: ChatMessageTool) => void;
+  buildFinalMessage?: (
+    message: string,
+    responseRes?: Response,
+  ) => RequestMessage["content"];
+  hasFinalContent?: (message: string) => boolean;
 }
 
 export interface LLMUsage {
