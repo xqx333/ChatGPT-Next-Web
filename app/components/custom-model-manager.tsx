@@ -866,6 +866,10 @@ export function CustomModelManager(props: {
       return true;
     });
   }, [filterCategoryId, options, search]);
+  const filteredModelNames = useMemo(
+    () => filteredModels.map((model) => model.name),
+    [filteredModels],
+  );
   const canTestModels = supportsModelTest(props.provider, props.requestFormat);
 
   const selectedSummary = selectedModels.slice(0, 12);
@@ -919,6 +923,22 @@ export function CustomModelManager(props: {
       } else {
         next.add(modelName);
       }
+      return next;
+    });
+  };
+
+  const selectFilteredModels = () => {
+    setSelectedNames((prev) => {
+      const next = new Set(prev);
+      filteredModelNames.forEach((modelName) => next.add(modelName));
+      return next;
+    });
+  };
+
+  const clearFilteredModels = () => {
+    setSelectedNames((prev) => {
+      const next = new Set(prev);
+      filteredModelNames.forEach((modelName) => next.delete(modelName));
       return next;
     });
   };
@@ -1377,16 +1397,14 @@ export function CustomModelManager(props: {
                   <IconButton
                     text={Locale.Settings.Access.CustomModel.Modal.SelectAll}
                     bordered
-                    onClick={() =>
-                      setSelectedNames(
-                        new Set(options.map((model) => model.name)),
-                      )
-                    }
+                    disabled={filteredModelNames.length === 0}
+                    onClick={selectFilteredModels}
                   />
                   <IconButton
                     text={Locale.Settings.Access.CustomModel.Modal.ClearAll}
                     bordered
-                    onClick={() => setSelectedNames(new Set())}
+                    disabled={filteredModelNames.length === 0}
+                    onClick={clearFilteredModels}
                   />
                 </div>
               </div>
