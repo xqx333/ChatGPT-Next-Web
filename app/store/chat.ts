@@ -630,15 +630,20 @@ export const useChatStore = createPersistStore(
         }
 
         // if not config compressModel, then using getSummarizeModel
-        const [model, providerName] = modelConfig.compressModel
-          ? [modelConfig.compressModel, modelConfig.compressProviderName]
+        const activeProviderName =
+          session.mask.modelConfig.providerName ||
+          getServiceProviderForRequestFormat(
+            session.mask.modelConfig.requestFormat,
+          );
+        const [model] = modelConfig.compressModel
+          ? [modelConfig.compressModel]
           : getSummarizeModel(
               session.mask.modelConfig.model,
-              session.mask.modelConfig.providerName,
+              activeProviderName,
               session.mask.modelConfig.requestFormat,
             );
         const api: ClientApi = getClientApi(
-          providerName as ServiceProvider,
+          activeProviderName as ServiceProvider,
           session.mask.modelConfig.requestFormat,
         );
 
@@ -673,7 +678,7 @@ export const useChatStore = createPersistStore(
             config: {
               model,
               stream: false,
-              providerName,
+              providerName: activeProviderName,
               requestFormat: session.mask.modelConfig.requestFormat,
             },
             onFinish(message, responseRes) {
@@ -741,7 +746,7 @@ export const useChatStore = createPersistStore(
               ...modelcfg,
               stream: true,
               model,
-              providerName,
+              providerName: activeProviderName,
               requestFormat: session.mask.modelConfig.requestFormat,
             },
             onUpdate(message) {

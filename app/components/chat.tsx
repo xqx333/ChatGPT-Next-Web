@@ -72,7 +72,6 @@ import {
   getMessageTextContent,
   safeLocalStorage,
   getModelSizes,
-  supportsCustomSize,
   useMobileScreen,
   selectOrCopy,
 } from "../utils";
@@ -557,6 +556,7 @@ export function ChatActions(props: {
     session.mask.modelConfig.requestFormat ?? RequestFormat.OpenAIChat;
   const isDalleImageRequest = isDalleImageRequestFormat(requestFormat);
   const isGptImageRequest = isGptImageRequestFormat(requestFormat);
+  const isImageRequest = isDalleImageRequest || isGptImageRequest;
   const modelSizes = isDalleImageRequest
     ? ["1024x1024", "1792x1024", "1024x1792"]
     : isGptImageRequest
@@ -711,9 +711,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {(isDalleImageRequest ||
-          isGptImageRequest ||
-          supportsCustomSize(currentModel)) && (
+        {isImageRequest && (
           <ChatAction
             onClick={() => setShowSizeSelector(true)}
             text={currentSize}
@@ -721,7 +719,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showSizeSelector && (
+        {isImageRequest && showSizeSelector && (
           <Selector
             defaultSelectedValue={currentSize}
             items={modelSizes.map((m) => ({
@@ -752,7 +750,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showQualitySelector && (
+        {(isDalleImageRequest || isGptImageRequest) && showQualitySelector && (
           <Selector
             defaultSelectedValue={currentQuality}
             items={(isGptImageRequest
@@ -787,7 +785,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showStyleSelector && (
+        {isDalleImageRequest && showStyleSelector && (
           <Selector
             defaultSelectedValue={currentStyle}
             items={dalleImageStyles.map((m) => ({
@@ -814,7 +812,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showBackgroundSelector && (
+        {isGptImageRequest && showBackgroundSelector && (
           <Selector
             defaultSelectedValue={currentBackground}
             items={gptImageBackgrounds.map((background) => ({
@@ -841,7 +839,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showOutputFormatSelector && (
+        {isGptImageRequest && showOutputFormatSelector && (
           <Selector
             defaultSelectedValue={currentOutputFormat}
             items={gptImageOutputFormats.map((format) => ({
@@ -868,7 +866,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showOutputCompressionSelector && (
+        {isGptImageRequest && showOutputCompressionSelector && (
           <Selector
             defaultSelectedValue={String(currentOutputCompression)}
             items={gptImageOutputCompressions.map((compression) => ({
@@ -896,7 +894,7 @@ export function ChatActions(props: {
           />
         )}
 
-        {showModerationSelector && (
+        {isGptImageRequest && showModerationSelector && (
           <Selector
             defaultSelectedValue={currentModeration}
             items={gptImageModerations.map((moderation) => ({

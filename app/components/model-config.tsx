@@ -81,7 +81,9 @@ export function ModelConfigList(props: {
       models.map((model) => ({
         value: model.name,
         label: model.displayName ?? model.name,
-        keywords: `${model.name} ${model.displayName ?? ""}`.trim(),
+        keywords: `${model.name} ${model.displayName ?? ""} ${
+          model.provider?.providerName ?? ""
+        }`.trim(),
       })),
     [models],
   );
@@ -538,26 +540,24 @@ export function ModelConfigList(props: {
             title={Locale.Settings.CompressModel.Title}
             subTitle={Locale.Settings.CompressModel.SubTitle}
           >
-            <Select
+            <SearchSelect
+              compact
               className={styles["select-compress-model"]}
-              aria-label={Locale.Settings.CompressModel.Title}
+              ariaLabel={Locale.Settings.CompressModel.Title}
               value={compressModelValue}
-              onChange={(e) => {
+              options={modelOptions}
+              searchPlaceholder={
+                Locale.Settings.Access.CustomModel.Modal.SearchPlaceholder
+              }
+              noResultText={Locale.SearchChat.Page.NoResult}
+              onChange={(nextValue) => {
                 props.updateConfig((config) => {
-                  config.compressModel = ModalConfigValidator.model(
-                    e.currentTarget.value,
-                  );
+                  config.compressModel = ModalConfigValidator.model(nextValue);
                   config.compressProviderName =
                     config.providerName || ServiceProvider.OpenAI;
                 });
               }}
-            >
-              {models.map((model, index) => (
-                <option value={model.name} key={index}>
-                  {model.displayName ?? model.name}
-                </option>
-              ))}
-            </Select>
+            />
           </ListItem>
         </>
       )}

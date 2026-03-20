@@ -15,6 +15,76 @@ type ChatModelSelectorItem = Omit<LLMModel, "provider"> & {
   isDefault?: boolean;
 };
 
+function inferModelCategory(model: ChatModelSelectorItem) {
+  const name = model.name.toLowerCase();
+  const fallback = model.provider?.providerName ?? "Other";
+
+  if (
+    name.startsWith("gpt") ||
+    name.startsWith("chatgpt") ||
+    name.startsWith("o1") ||
+    name.startsWith("o3") ||
+    name.startsWith("o4") ||
+    name.startsWith("dall-e") ||
+    name.startsWith("dalle") ||
+    name.startsWith("gpt-image") ||
+    name.startsWith("chatgpt-image") ||
+    name.startsWith("advanced-voice") ||
+    name.startsWith("sora")
+  ) {
+    return { id: "chatgpt", label: "ChatGPT" };
+  }
+  if (name.includes("deepseek")) return { id: "deepseek", label: "DeepSeek" };
+  if (name.startsWith("claude")) return { id: "claude", label: "Claude" };
+  if (name.startsWith("qwen") || name.startsWith("qwq")) {
+    return { id: "qwen", label: "Qwen" };
+  }
+  if (
+    name.startsWith("gemini") ||
+    name.startsWith("gemma") ||
+    name.includes("learnlm")
+  ) {
+    return { id: "gemini", label: "Gemini" };
+  }
+  if (name.startsWith("grok")) return { id: "grok", label: "Grok" };
+  if (
+    name.includes("glm") ||
+    name.startsWith("cogview") ||
+    name.startsWith("cogvideox")
+  ) {
+    return { id: "glm", label: "GLM" };
+  }
+  if (name.startsWith("moonshot") || name.startsWith("kimi")) {
+    return { id: "moonshot", label: "MoonShot" };
+  }
+  if (
+    name.startsWith("doubao") ||
+    name.startsWith("seedream") ||
+    name.startsWith("seedance")
+  ) {
+    return { id: "doubao", label: "DouBao" };
+  }
+  if (name.startsWith("ernie") || name.startsWith("wenxin")) {
+    return { id: "baidu", label: "Baidu" };
+  }
+  if (name.startsWith("hunyuan")) {
+    return { id: "tencent", label: "Tencent" };
+  }
+  if (name.includes("llama")) return { id: "llama", label: "Llama" };
+  if (name.startsWith("mixtral") || name.startsWith("mistral")) {
+    return { id: "mistral", label: "Mistral" };
+  }
+  if (name.startsWith("command") || name.startsWith("cohere")) {
+    return { id: "cohere", label: "Cohere" };
+  }
+  if (name.startsWith("flux")) return { id: "flux", label: "Flux" };
+
+  return {
+    id: fallback.toLowerCase().replace(/\s+/g, "-"),
+    label: fallback,
+  };
+}
+
 export function ChatModelSelector(props: {
   models: readonly ChatModelSelectorItem[];
   currentModel: string;
@@ -37,13 +107,20 @@ export function ChatModelSelector(props: {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  const modelItems = useMemo(
+    () =>
+      models.map((model) => ({
+        model,
+        category: inferModelCategory(model),
+      })),
+    [models],
+  );
+
   const providerOptions = useMemo(() => {
     const providers = new Map<string, string>();
 
-    models.forEach((model) => {
-      if (model.provider?.id && model.provider?.providerName) {
-        providers.set(model.provider.id, model.provider.providerName);
-      }
+    modelItems.forEach(({ category }) => {
+      providers.set(category.id, category.label);
     });
 
     return [
@@ -55,13 +132,13 @@ export function ChatModelSelector(props: {
         .map(([value, label]) => ({ value, label }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     ];
-  }, [models]);
+  }, [modelItems]);
 
   const filteredModels = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    return models.filter((model) => {
-      if (providerFilter !== "all" && model.provider?.id !== providerFilter) {
+    return modelItems.filter(({ model, category }) => {
+      if (providerFilter !== "all" && category.id !== providerFilter) {
         return false;
       }
 
@@ -69,15 +146,11 @@ export function ChatModelSelector(props: {
         return true;
       }
 
-      return [
-        model.displayName ?? model.name,
-        model.name,
-        model.provider?.providerName,
-      ]
+      return [model.displayName ?? model.name, model.name, category.label]
         .filter(Boolean)
         .some((value) => value!.toLowerCase().includes(keyword));
     });
-  }, [models, providerFilter, search]);
+  }, [modelItems, providerFilter, search]);
 
   return (
     <div className="modal-mask" onClick={onClose}>
@@ -148,7 +221,7 @@ export function ChatModelSelector(props: {
               {Locale.Settings.Access.CustomModel.Modal.Empty}
             </div>
           ) : (
-            filteredModels.map((model) => {
+            filteredModels.map(({ model, category }) => {
               const selected = model.name === currentModel;
 
               return (
@@ -170,7 +243,7 @@ export function ChatModelSelector(props: {
                         {model.displayName ?? model.name}
                       </div>
                       <div className={styles["model-selector-item-provider"]}>
-                        {model.provider?.providerName ?? model.name}
+                        {category.label}
                       </div>
                     </div>
                   </div>
