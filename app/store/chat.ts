@@ -682,7 +682,9 @@ export const useChatStore = createPersistStore(
                   session,
                   (session) =>
                     (session.topic =
-                      message.length > 0 ? trimTopic(message) : DEFAULT_TOPIC),
+                      typeof message === "string" && message.length > 0
+                        ? trimTopic(message)
+                        : DEFAULT_TOPIC),
                 );
               }
             },
@@ -746,7 +748,7 @@ export const useChatStore = createPersistStore(
               session.memoryPrompt = message;
             },
             onFinish(message, responseRes) {
-              if (responseRes?.status === 200) {
+              if (responseRes?.status === 200 && typeof message === "string") {
                 console.log("[Memory] ", message);
                 get().updateTargetSession(session, (session) => {
                   session.lastSummarizeIndex = lastSummarizeIndex;

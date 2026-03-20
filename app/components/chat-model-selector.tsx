@@ -10,8 +10,13 @@ import Locale from "../locales";
 import { Avatar } from "./emoji";
 import styles from "./chat-model-selector.module.scss";
 
+type ChatModelSelectorItem = Omit<LLMModel, "provider"> & {
+  provider?: LLMModel["provider"];
+  isDefault?: boolean;
+};
+
 export function ChatModelSelector(props: {
-  models: readonly LLMModel[];
+  models: readonly ChatModelSelectorItem[];
   currentModel: string;
   onClose: () => void;
   onSelect: (model: string) => void;

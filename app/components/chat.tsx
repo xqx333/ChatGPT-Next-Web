@@ -90,6 +90,7 @@ import {
   GptImageOutputFormat,
   GptImageQuality,
   GptImageSize,
+  ModelSize,
 } from "../typing";
 import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
@@ -735,7 +736,7 @@ export function ChatActions(props: {
                 if (isGptImageRequest) {
                   session.mask.modelConfig.gptImageSize = size as GptImageSize;
                 } else {
-                  session.mask.modelConfig.size = size;
+                  session.mask.modelConfig.size = size as ModelSize;
                 }
               });
               showToast(size);
@@ -1634,10 +1635,6 @@ function _Chat() {
 
   const handlePaste = useCallback(
     async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const currentModel = chatStore.currentSession().mask.modelConfig.model;
-      if (!isVisionModel(currentModel)) {
-        return;
-      }
       const items = (event.clipboardData || window.clipboardData).items;
       for (const item of items) {
         if (item.kind === "file" && item.type.startsWith("image/")) {
@@ -1672,7 +1669,7 @@ function _Chat() {
         }
       }
     },
-    [attachImages, chatStore],
+    [attachImages],
   );
 
   async function uploadImage() {

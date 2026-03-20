@@ -29,6 +29,7 @@ import {
   getHeaders,
   LLMModel,
   LLMUsage,
+  MultimodalContent,
   SpeechOptions,
 } from "../api";
 import { ChatGPTApi, DalleRequestPayload } from "./openai";
@@ -239,7 +240,10 @@ export class OpenAIImageApi extends ChatGPTApi {
     }
   }
 
-  async extractMessage(res: any, mimeType: string) {
+  async extractMessage(
+    res: any,
+    mimeType: string = "image/png",
+  ): Promise<string | MultimodalContent[]> {
     if (res.error) {
       return "```\n" + JSON.stringify(res, null, 4) + "\n```";
     }
@@ -253,7 +257,7 @@ export class OpenAIImageApi extends ChatGPTApi {
 
     return [
       {
-        type: "image_url",
+        type: "image_url" as const,
         image_url: {
           url,
         },
