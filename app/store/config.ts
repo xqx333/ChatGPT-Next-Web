@@ -1,5 +1,14 @@
 import { LLMModel } from "../client/api";
-import { DalleQuality, DalleStyle, ModelSize } from "../typing";
+import {
+  DalleQuality,
+  DalleStyle,
+  GptImageBackground,
+  GptImageModeration,
+  GptImageOutputFormat,
+  GptImageQuality,
+  GptImageSize,
+  ModelSize,
+} from "../typing";
 import { getClientConfig } from "../config/client";
 import {
   DEFAULT_INPUT_TEMPLATE,
@@ -87,6 +96,12 @@ export const DEFAULT_CONFIG = {
     size: "1024x1024" as ModelSize,
     quality: "standard" as DalleQuality,
     style: "vivid" as DalleStyle,
+    gptImageSize: "auto" as GptImageSize,
+    gptImageQuality: "auto" as GptImageQuality,
+    gptImageBackground: "auto" as GptImageBackground,
+    gptImageOutputFormat: "png" as GptImageOutputFormat,
+    gptImageOutputCompression: 100,
+    gptImageModeration: "auto" as GptImageModeration,
   },
 
   ttsConfig: {
@@ -186,6 +201,9 @@ export const ModalConfigValidator = {
   top_p(x: number) {
     return limitNumber(x, 0, 1, 1);
   },
+  gptImageOutputCompression(x: number) {
+    return limitNumber(x, 0, 100, 100);
+  },
 };
 
 export const useAppConfig = createPersistStore(
@@ -222,7 +240,7 @@ export const useAppConfig = createPersistStore(
   }),
   {
     name: StoreKey.Config,
-    version: 4.2,
+    version: 4.3,
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
@@ -290,6 +308,34 @@ export const useAppConfig = createPersistStore(
         state.modelConfig.compressProviderName =
           DEFAULT_CONFIG.modelConfig.compressProviderName;
       }
+
+      if (version < 4.3) {
+        state.modelConfig.gptImageSize =
+          DEFAULT_CONFIG.modelConfig.gptImageSize;
+        state.modelConfig.gptImageQuality =
+          DEFAULT_CONFIG.modelConfig.gptImageQuality;
+        state.modelConfig.gptImageBackground =
+          DEFAULT_CONFIG.modelConfig.gptImageBackground;
+        state.modelConfig.gptImageOutputFormat =
+          DEFAULT_CONFIG.modelConfig.gptImageOutputFormat;
+        state.modelConfig.gptImageOutputCompression =
+          DEFAULT_CONFIG.modelConfig.gptImageOutputCompression;
+        state.modelConfig.gptImageModeration =
+          DEFAULT_CONFIG.modelConfig.gptImageModeration;
+      }
+
+      state.modelConfig.gptImageSize ??=
+        DEFAULT_CONFIG.modelConfig.gptImageSize;
+      state.modelConfig.gptImageQuality ??=
+        DEFAULT_CONFIG.modelConfig.gptImageQuality;
+      state.modelConfig.gptImageBackground ??=
+        DEFAULT_CONFIG.modelConfig.gptImageBackground;
+      state.modelConfig.gptImageOutputFormat ??=
+        DEFAULT_CONFIG.modelConfig.gptImageOutputFormat;
+      state.modelConfig.gptImageOutputCompression ??=
+        DEFAULT_CONFIG.modelConfig.gptImageOutputCompression;
+      state.modelConfig.gptImageModeration ??=
+        DEFAULT_CONFIG.modelConfig.gptImageModeration;
 
       return state as any;
     },

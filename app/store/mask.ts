@@ -118,7 +118,7 @@ export const useMaskStore = createPersistStore(
   }),
   {
     name: StoreKey.Mask,
-    version: 3.2,
+    version: 3.3,
 
     migrate(state, version) {
       const newState = JSON.parse(JSON.stringify(state)) as MaskState;
@@ -145,6 +145,17 @@ export const useMaskStore = createPersistStore(
         mask.modelConfig.providerName = getServiceProviderForRequestFormat(
           mask.modelConfig.requestFormat,
         );
+        const config = useAppConfig.getState();
+        mask.modelConfig.gptImageSize ??= config.modelConfig.gptImageSize;
+        mask.modelConfig.gptImageQuality ??= config.modelConfig.gptImageQuality;
+        mask.modelConfig.gptImageBackground ??=
+          config.modelConfig.gptImageBackground;
+        mask.modelConfig.gptImageOutputFormat ??=
+          config.modelConfig.gptImageOutputFormat;
+        mask.modelConfig.gptImageOutputCompression ??=
+          config.modelConfig.gptImageOutputCompression;
+        mask.modelConfig.gptImageModeration ??=
+          config.modelConfig.gptImageModeration;
       });
 
       return newState as any;

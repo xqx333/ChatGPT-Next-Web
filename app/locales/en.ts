@@ -585,6 +585,34 @@ const en: LocaleType = {
       Title: "Max Tokens",
       SubTitle: "Maximum length of input tokens and generated tokens",
     },
+    ImageSize: {
+      Title: "Image Size",
+      SubTitle: "Available options depend on the selected image request format",
+    },
+    ImageQuality: {
+      Title: "Image Quality",
+      SubTitle: "Quality options for the selected image request format",
+    },
+    ImageStyle: {
+      Title: "Image Style",
+      SubTitle: "Only applies to DALL·E image requests",
+    },
+    ImageBackground: {
+      Title: "Image Background",
+      SubTitle: "Only applies to GPT Image requests",
+    },
+    ImageOutputFormat: {
+      Title: "Output Format",
+      SubTitle: "Choose the format of the generated image file",
+    },
+    ImageOutputCompression: {
+      Title: "Output Compression",
+      SubTitle: "Used for JPEG and WebP output",
+    },
+    ImageModeration: {
+      Title: "Image Moderation",
+      SubTitle: "Moderation strictness for GPT Image requests",
+    },
     PresencePenalty: {
       Title: "Presence Penalty",
       SubTitle:

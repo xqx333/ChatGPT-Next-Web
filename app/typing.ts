@@ -11,6 +11,11 @@ export interface RequestMessage {
 export type DalleSize = "1024x1024" | "1792x1024" | "1024x1792";
 export type DalleQuality = "standard" | "hd";
 export type DalleStyle = "vivid" | "natural";
+export type GptImageSize = "auto" | "1024x1024" | "1536x1024" | "1024x1536";
+export type GptImageQuality = "auto" | "low" | "medium" | "high";
+export type GptImageBackground = "auto" | "transparent" | "opaque";
+export type GptImageOutputFormat = "png" | "jpeg" | "webp";
+export type GptImageModeration = "auto" | "low";
 
 export type ModelSize =
   | "1024x1024"

@@ -62,6 +62,7 @@ import {
   Google,
   GoogleSafetySettingsThreshold,
   getServiceProviderForRequestFormat,
+  isOpenAIImageRequestFormat,
   OPENAI_BASE_URL,
   Path,
   RequestFormat,
@@ -592,7 +593,8 @@ export function Settings() {
   const accessStore = useAccessStore();
   const isOpenAIRequestFormat =
     accessStore.requestFormat === RequestFormat.OpenAIChat ||
-    accessStore.requestFormat === RequestFormat.OpenAIResponses;
+    accessStore.requestFormat === RequestFormat.OpenAIResponses ||
+    isOpenAIImageRequestFormat(accessStore.requestFormat);
   const shouldHideBalanceQuery = useMemo(() => {
     const isOpenAiUrl = accessStore.openaiUrl.includes(OPENAI_BASE_URL);
 

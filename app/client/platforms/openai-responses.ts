@@ -8,7 +8,6 @@ import {
 import {
   getMessageTextContent,
   getTimeoutMSByModel,
-  isDalle3 as isDalle3Model,
   isVisionModel,
 } from "@/app/utils";
 import { preProcessImageContent, stream } from "@/app/utils/chat";
@@ -136,10 +135,6 @@ export class OpenAIResponsesApi extends ChatGPTApi {
   }
 
   async chat(options: ChatOptions): Promise<void> {
-    if (isDalle3Model(options.config.model)) {
-      return super.chat(options);
-    }
-
     const modelConfig = {
       ...useAppConfig.getState().modelConfig,
       ...useChatStore.getState().currentSession().mask.modelConfig,

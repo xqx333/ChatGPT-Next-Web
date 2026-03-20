@@ -580,6 +580,34 @@ const cn = {
       Title: "单次回复限制 (max_tokens)",
       SubTitle: "单次交互所用的最大 Token 数",
     },
+    ImageSize: {
+      Title: "图片尺寸",
+      SubTitle: "可选项会跟着当前图片请求方式变化",
+    },
+    ImageQuality: {
+      Title: "图片质量",
+      SubTitle: "质量选项会跟着当前图片请求方式变化",
+    },
+    ImageStyle: {
+      Title: "图片风格",
+      SubTitle: "仅对 DALL·E 图片请求生效",
+    },
+    ImageBackground: {
+      Title: "背景",
+      SubTitle: "仅对 GPT Image 图片请求生效",
+    },
+    ImageOutputFormat: {
+      Title: "输出格式",
+      SubTitle: "选择生成图片的文件格式",
+    },
+    ImageOutputCompression: {
+      Title: "输出压缩",
+      SubTitle: "用于 JPEG 和 WebP 输出",
+    },
+    ImageModeration: {
+      Title: "图片审核",
+      SubTitle: "GPT Image 请求的审核严格度",
+    },
     PresencePenalty: {
       Title: "话题新鲜度 (presence_penalty)",
       SubTitle: "值越大，越有可能扩展到新话题",

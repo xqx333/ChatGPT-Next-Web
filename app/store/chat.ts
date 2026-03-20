@@ -1,9 +1,4 @@
-import {
-  getMessageTextContent,
-  isDalle3,
-  safeLocalStorage,
-  trimTopic,
-} from "../utils";
+import { getMessageTextContent, safeLocalStorage, trimTopic } from "../utils";
 
 import { indexedDBStorage } from "@/app/utils/indexedDB-storage";
 import { nanoid } from "nanoid";
@@ -21,6 +16,7 @@ import {
   GEMINI_SUMMARIZE_MODEL,
   getRequestFormatForServiceProvider,
   getServiceProviderForRequestFormat,
+  isOpenAIImageRequestFormat,
   KnowledgeCutOffDate,
   RequestFormat,
   ServiceProvider,
@@ -628,8 +624,8 @@ export const useChatStore = createPersistStore(
         const config = useAppConfig.getState();
         const session = targetSession;
         const modelConfig = session.mask.modelConfig;
-        // skip summarize when using dalle3?
-        if (isDalle3(modelConfig.model)) {
+        // Skip summarize when using image-only generation requests.
+        if (isOpenAIImageRequestFormat(modelConfig.requestFormat)) {
           return;
         }
 
@@ -797,7 +793,7 @@ export const useChatStore = createPersistStore(
   },
   {
     name: StoreKey.Chat,
-    version: 3.4,
+    version: 3.5,
     migrate(persistedState, version) {
       const state = persistedState as any;
       const newState = JSON.parse(
@@ -873,6 +869,19 @@ export const useChatStore = createPersistStore(
           getServiceProviderForRequestFormat(
             session.mask.modelConfig.requestFormat,
           );
+        const config = useAppConfig.getState();
+        session.mask.modelConfig.gptImageSize ??=
+          config.modelConfig.gptImageSize;
+        session.mask.modelConfig.gptImageQuality ??=
+          config.modelConfig.gptImageQuality;
+        session.mask.modelConfig.gptImageBackground ??=
+          config.modelConfig.gptImageBackground;
+        session.mask.modelConfig.gptImageOutputFormat ??=
+          config.modelConfig.gptImageOutputFormat;
+        session.mask.modelConfig.gptImageOutputCompression ??=
+          config.modelConfig.gptImageOutputCompression;
+        session.mask.modelConfig.gptImageModeration ??=
+          config.modelConfig.gptImageModeration;
       });
 
       return newState as any;

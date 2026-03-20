@@ -3,6 +3,7 @@ import {
   ModelProvider,
   RequestFormat,
   getRequestFormatForServiceProvider,
+  isOpenAIImageRequestFormat,
   ServiceProvider,
 } from "../constant";
 import {
@@ -25,6 +26,14 @@ import { XAIApi } from "./platforms/xai";
 import { ChatGLMApi } from "./platforms/glm";
 import { SiliconflowApi } from "./platforms/siliconflow";
 import { OpenAIResponsesApi } from "./platforms/openai-responses";
+import { OpenAIImageApi } from "./platforms/openai-image";
+import {
+  GptImageBackground,
+  GptImageModeration,
+  GptImageOutputFormat,
+  GptImageQuality,
+  GptImageSize,
+} from "../typing";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -63,6 +72,12 @@ export interface LLMConfig {
   size?: DalleRequestPayload["size"];
   quality?: DalleRequestPayload["quality"];
   style?: DalleRequestPayload["style"];
+  gptImageSize?: GptImageSize;
+  gptImageQuality?: GptImageQuality;
+  gptImageBackground?: GptImageBackground;
+  gptImageOutputFormat?: GptImageOutputFormat;
+  gptImageOutputCompression?: number;
+  gptImageModeration?: GptImageModeration;
 }
 
 export interface SpeechOptions {
@@ -143,6 +158,11 @@ export class ClientApi {
   ) {
     if (requestFormat === RequestFormat.OpenAIResponses) {
       this.llm = new OpenAIResponsesApi();
+      return;
+    }
+
+    if (isOpenAIImageRequestFormat(requestFormat)) {
+      this.llm = new OpenAIImageApi();
       return;
     }
 
@@ -340,6 +360,8 @@ export function getClientApi(
     case RequestFormat.Anthropic:
       return new ClientApi(ModelProvider.Claude, requestFormat);
     case RequestFormat.OpenAIResponses:
+    case RequestFormat.OpenAIImage:
+    case RequestFormat.OpenAIGPTImage:
       return new ClientApi(ModelProvider.GPT, requestFormat);
   }
 

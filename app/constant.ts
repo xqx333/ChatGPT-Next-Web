@@ -116,6 +116,8 @@ export enum RequestFormat {
   Gemini = "gemini",
   Anthropic = "anthropic",
   OpenAIResponses = "openai-responses",
+  OpenAIImage = "openai-image",
+  OpenAIGPTImage = "openai-gpt-image",
 }
 
 export const REQUEST_FORMAT_LABELS: Record<RequestFormat, string> = {
@@ -123,6 +125,8 @@ export const REQUEST_FORMAT_LABELS: Record<RequestFormat, string> = {
   [RequestFormat.Gemini]: "Gemini",
   [RequestFormat.Anthropic]: "Anthropic",
   [RequestFormat.OpenAIResponses]: "OpenAI Responses",
+  [RequestFormat.OpenAIImage]: "OpenAI Image API (DALL·E)",
+  [RequestFormat.OpenAIGPTImage]: "OpenAI GPT Image API",
 };
 
 export const REQUEST_FORMAT_OPTIONS = [
@@ -130,7 +134,24 @@ export const REQUEST_FORMAT_OPTIONS = [
   RequestFormat.Gemini,
   RequestFormat.Anthropic,
   RequestFormat.OpenAIResponses,
+  RequestFormat.OpenAIImage,
+  RequestFormat.OpenAIGPTImage,
 ] as const;
+
+export function isDalleImageRequestFormat(requestFormat?: RequestFormat) {
+  return requestFormat === RequestFormat.OpenAIImage;
+}
+
+export function isGptImageRequestFormat(requestFormat?: RequestFormat) {
+  return requestFormat === RequestFormat.OpenAIGPTImage;
+}
+
+export function isOpenAIImageRequestFormat(requestFormat?: RequestFormat) {
+  return (
+    isDalleImageRequestFormat(requestFormat) ||
+    isGptImageRequestFormat(requestFormat)
+  );
+}
 
 export function getServiceProviderForRequestFormat(
   requestFormat: RequestFormat,
@@ -140,6 +161,8 @@ export function getServiceProviderForRequestFormat(
       return ServiceProvider.Google;
     case RequestFormat.Anthropic:
       return ServiceProvider.Anthropic;
+    case RequestFormat.OpenAIGPTImage:
+    case RequestFormat.OpenAIImage:
     case RequestFormat.OpenAIResponses:
     case RequestFormat.OpenAIChat:
     default:
@@ -203,6 +226,7 @@ export const OpenaiPath = {
   ResponsesPath: "v1/responses",
   SpeechPath: "v1/audio/speech",
   ImagePath: "v1/images/generations",
+  ImageEditsPath: "v1/images/edits",
   UsagePath: "dashboard/billing/usage",
   SubsPath: "dashboard/billing/subscription",
   ListModelPath: "v1/models",
@@ -567,6 +591,9 @@ const openaiModels = [
   "gpt-4.1",
   "gpt-4.1-mini",
   "gpt-4.1-nano",
+  "gpt-image-1",
+  "gpt-image-1-mini",
+  "gpt-image-1.5",
   "gpt-4o",
   "gpt-4o-2024-05-13",
   "gpt-4o-2024-08-06",
