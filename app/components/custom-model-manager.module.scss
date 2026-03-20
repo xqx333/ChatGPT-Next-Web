@@ -57,17 +57,27 @@
 .manager-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 50vh;
+  gap: 14px;
+  min-height: 0;
 }
 
 .manager-toolbar {
+  display: flex;
+  padding: 4px 0 2px;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.manager-add-row {
+  width: 100%;
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
 
+.manager-add-input,
 .manager-search {
   min-width: 240px;
   flex: 1;
@@ -76,7 +86,7 @@
 .manager-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -95,8 +105,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
   border: var(--border-in-light);
   background-color: var(--white);
   cursor: pointer;
@@ -111,6 +121,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -119,7 +130,7 @@
 }
 
 .manager-item-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--black);
   word-break: break-word;
@@ -142,17 +153,67 @@
   font-size: 11px;
 }
 
+.manager-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.manager-item-test-success,
+.manager-item-test-failed,
+.manager-timeout {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: var(--border-in-light);
+  background-color: var(--white);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.manager-item-test-success {
+  color: #51c65d;
+}
+
+.manager-item-test-failed {
+  color: #dc2626;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.manager-timeout {
+  color: var(--black);
+  opacity: 0.7;
+}
+
 @media only screen and (max-width: 600px) {
   .custom-model-toolbar,
   .manager-toolbar {
     align-items: stretch;
   }
 
+  .manager-add-row {
+    align-items: stretch;
+  }
+
+  .manager-add-input,
   .manager-search {
     min-width: 100%;
   }
 
   .manager-item {
     padding: 12px;
+    align-items: flex-start;
+  }
+
+  .manager-item-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 }

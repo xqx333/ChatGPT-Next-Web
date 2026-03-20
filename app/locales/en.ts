@@ -533,7 +533,35 @@ const en: LocaleType = {
         },
         Modal: {
           Title: "Select Models",
+          Add: "Add Model",
+          AddPlaceholder:
+            "Enter model names, press Enter or use commas to add in batch",
+          AddEmpty: "Please enter at least one model name",
+          AddExists: "These models are already in the list",
+          AddSuccess(count: number) {
+            return `Added ${count} models. Click confirm to save`;
+          },
           SearchPlaceholder: "Search models",
+          Test: "Test",
+          Testing: "Testing...",
+          TestAll: "Test All",
+          TestingAll: "Testing All...",
+          TestUnsupported:
+            "The current request format does not support model testing yet",
+          TestTimeout: "Request timed out",
+          TestTimeoutHint(seconds: number) {
+            return `${seconds}s`;
+          },
+          TestSuccess(code: number, duration: string) {
+            return `${code} · ${duration}`;
+          },
+          TestFailed: "Test failed",
+          TestFailedWithCode(code: number) {
+            return `${code} failed`;
+          },
+          TestAllSummary(success: number, total: number) {
+            return `Testing finished: ${success}/${total} models passed`;
+          },
           SelectAll: "Select All",
           ClearAll: "Clear All",
           Empty: "No matching models",

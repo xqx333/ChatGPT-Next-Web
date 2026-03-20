@@ -61,6 +61,7 @@ import {
   XAI,
   Google,
   GoogleSafetySettingsThreshold,
+  getRequestFormatForServiceProvider,
   getServiceProviderForRequestFormat,
   isOpenAIImageRequestFormat,
   OPENAI_BASE_URL,
@@ -633,6 +634,152 @@ export function Settings() {
   const builtinCount = SearchService.count.builtin;
   const customCount = promptStore.getUserPrompts().length ?? 0;
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
+  const customModelAccess = useMemo(() => {
+    if (accessStore.useCustomConfig) {
+      return {
+        endpoint: accessStore.openaiUrl,
+        apiKey: accessStore.openaiApiKey,
+        provider: getServiceProviderForRequestFormat(accessStore.requestFormat),
+        requestFormat: accessStore.requestFormat,
+      };
+    }
+
+    switch (accessStore.provider) {
+      case ServiceProvider.Azure:
+        return {
+          endpoint: accessStore.azureUrl,
+          apiKey: accessStore.azureApiKey,
+          provider: accessStore.provider,
+          requestFormat: getRequestFormatForServiceProvider(
+            accessStore.provider,
+          ),
+        };
+      case ServiceProvider.Google:
+        return {
+          endpoint: accessStore.googleUrl,
+          apiKey: accessStore.googleApiKey,
+          provider: accessStore.provider,
+          requestFormat: getRequestFormatForServiceProvider(
+            accessStore.provider,
+          ),
+        };
+      case ServiceProvider.Anthropic:
+        return {
+          endpoint: accessStore.anthropicUrl,
+          apiKey: accessStore.anthropicApiKey,
+          provider: accessStore.provider,
+          requestFormat: getRequestFormatForServiceProvider(
+            accessStore.provider,
+          ),
+        };
+      case ServiceProvider.ByteDance:
+        return {
+          endpoint: accessStore.bytedanceUrl,
+          apiKey: accessStore.bytedanceApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.Alibaba:
+        return {
+          endpoint: accessStore.alibabaUrl,
+          apiKey: accessStore.alibabaApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.Tencent:
+        return {
+          endpoint: accessStore.tencentUrl,
+          apiKey: [accessStore.tencentSecretId, accessStore.tencentSecretKey]
+            .filter(Boolean)
+            .join(":"),
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.Moonshot:
+        return {
+          endpoint: accessStore.moonshotUrl,
+          apiKey: accessStore.moonshotApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.Iflytek:
+        return {
+          endpoint: accessStore.iflytekUrl,
+          apiKey: [accessStore.iflytekApiKey, accessStore.iflytekApiSecret]
+            .filter(Boolean)
+            .join(":"),
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.DeepSeek:
+        return {
+          endpoint: accessStore.deepseekUrl,
+          apiKey: accessStore.deepseekApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.XAI:
+        return {
+          endpoint: accessStore.xaiUrl,
+          apiKey: accessStore.xaiApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.ChatGLM:
+        return {
+          endpoint: accessStore.chatglmUrl,
+          apiKey: accessStore.chatglmApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      case ServiceProvider.SiliconFlow:
+        return {
+          endpoint: accessStore.siliconflowUrl,
+          apiKey: accessStore.siliconflowApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+      default:
+        return {
+          endpoint: accessStore.openaiUrl,
+          apiKey: accessStore.openaiApiKey,
+          provider: accessStore.provider,
+          requestFormat: accessStore.requestFormat,
+        };
+    }
+  }, [
+    accessStore.alibabaApiKey,
+    accessStore.alibabaUrl,
+    accessStore.anthropicApiKey,
+    accessStore.anthropicUrl,
+    accessStore.azureApiKey,
+    accessStore.azureUrl,
+    accessStore.bytedanceApiKey,
+    accessStore.bytedanceUrl,
+    accessStore.chatglmApiKey,
+    accessStore.chatglmUrl,
+    accessStore.deepseekApiKey,
+    accessStore.deepseekUrl,
+    accessStore.googleApiKey,
+    accessStore.googleUrl,
+    accessStore.iflytekApiKey,
+    accessStore.iflytekApiSecret,
+    accessStore.iflytekUrl,
+    accessStore.moonshotApiKey,
+    accessStore.moonshotUrl,
+    accessStore.openaiApiKey,
+    accessStore.openaiUrl,
+    accessStore.provider,
+    accessStore.requestFormat,
+    accessStore.siliconflowApiKey,
+    accessStore.siliconflowUrl,
+    accessStore.tencentSecretId,
+    accessStore.tencentSecretKey,
+    accessStore.tencentUrl,
+    accessStore.useCustomConfig,
+    accessStore.xaiApiKey,
+    accessStore.xaiUrl,
+  ]);
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
@@ -1932,8 +2079,13 @@ export function Settings() {
               models={config.models}
               customModels={config.customModels}
               defaultModel={accessStore.defaultModel}
-              endpoint={accessStore.openaiUrl}
-              apiKey={accessStore.openaiApiKey}
+              endpoint={customModelAccess.endpoint}
+              apiKey={customModelAccess.apiKey}
+              provider={customModelAccess.provider}
+              requestFormat={customModelAccess.requestFormat}
+              azureApiVersion={accessStore.azureApiVersion}
+              googleApiVersion={accessStore.googleApiVersion}
+              anthropicApiVersion={accessStore.anthropicApiVersion}
               onChangeCustomModels={(customModels) =>
                 config.update((config) => (config.customModels = customModels))
               }

@@ -549,7 +549,33 @@ const cn = {
         },
         Modal: {
           Title: "选择模型",
+          Add: "添加模型",
+          AddPlaceholder: "输入模型名，支持回车或逗号批量添加",
+          AddEmpty: "请先输入模型名",
+          AddExists: "这些模型已经在列表里了",
+          AddSuccess(count: number) {
+            return `已添加 ${count} 个模型，确认后生效`;
+          },
           SearchPlaceholder: "搜索模型",
+          Test: "测试",
+          Testing: "测试中...",
+          TestAll: "全部测试",
+          TestingAll: "测试全部中...",
+          TestUnsupported: "当前请求方式暂不支持模型测试",
+          TestTimeout: "测试超时",
+          TestTimeoutHint(seconds: number) {
+            return `${seconds}秒`;
+          },
+          TestSuccess(code: number, duration: string) {
+            return `${code} · ${duration}`;
+          },
+          TestFailed: "测试失败",
+          TestFailedWithCode(code: number) {
+            return `${code} 失败`;
+          },
+          TestAllSummary(success: number, total: number) {
+            return `测试完成 ${success}/${total} 个模型可用`;
+          },
           SelectAll: "全选",
           ClearAll: "全不选",
           Empty: "没有匹配的模型",

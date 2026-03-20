@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import LoadingIcon from "../icons/three-dots.svg";
 import ReloadIcon from "../icons/reload.svg";
@@ -10,6 +10,21 @@ import { Modal, Select, showToast } from "./ui-lib";
 import styles from "./custom-model-manager.module.scss";
 import { LLMModel } from "../client/api";
 import { collectModelTableWithDefaultModel } from "../utils/model";
+import {
+  Alibaba,
+  Anthropic,
+  Azure,
+  ByteDance,
+  ChatGLM,
+  DeepSeek,
+  Moonshot,
+  OpenaiPath,
+  RequestFormat,
+  ServiceProvider,
+  SiliconFlow,
+  XAI,
+} from "../constant";
+import { getClientConfig } from "../config/client";
 
 type ModelManagerOption = {
   name: string;
@@ -26,6 +41,48 @@ type RemoteModelEntry = {
   owned_by?: string;
   supported_endpoint_types?: string[];
 };
+
+type ModelTestState = {
+  status: "idle" | "testing" | "success" | "failed";
+  code?: number;
+  durationMs?: number;
+  message?: string;
+};
+
+const MODEL_TEST_TIMEOUT_MS = 5000;
+const OPENAI_STYLE_PROVIDERS = new Set<ServiceProvider>([
+  ServiceProvider.OpenAI,
+  ServiceProvider.Azure,
+  ServiceProvider.ByteDance,
+  ServiceProvider.Alibaba,
+  ServiceProvider.Moonshot,
+  ServiceProvider.DeepSeek,
+  ServiceProvider.XAI,
+  ServiceProvider.ChatGLM,
+  ServiceProvider.SiliconFlow,
+]);
+const UNSUPPORTED_TEST_PROVIDERS = new Set<ServiceProvider>([
+  ServiceProvider.Baidu,
+  ServiceProvider.Tencent,
+  ServiceProvider.Iflytek,
+]);
+const REPLACEABLE_API_PATHS = [
+  OpenaiPath.ListModelPath,
+  OpenaiPath.ChatPath,
+  OpenaiPath.ResponsesPath,
+  OpenaiPath.ImagePath,
+  OpenaiPath.ImageEditsPath,
+  Anthropic.ChatPath,
+  Anthropic.ChatPath1,
+  ByteDance.ChatPath,
+  Moonshot.ChatPath,
+  DeepSeek.ChatPath,
+  XAI.ChatPath,
+  ChatGLM.ChatPath,
+  ChatGLM.ImagePath,
+  SiliconFlow.ChatPath,
+  SiliconFlow.ListModelPath,
+];
 
 function isRemoteModelEntry(item: unknown): item is RemoteModelEntry {
   return (
@@ -149,6 +206,323 @@ function buildModelsUrl(endpoint: string) {
   return url.toString();
 }
 
+function normalizeEndpointUrl(endpoint: string) {
+  const rawEndpoint = endpoint.trim();
+  if (!rawEndpoint) {
+    throw new Error(Locale.Settings.Access.CustomModel.MissingConfig);
+  }
+
+  const normalizedEndpoint = /^https?:\/\//i.test(rawEndpoint)
+    ? rawEndpoint
+    : `https://${rawEndpoint}`;
+  const url = new URL(normalizedEndpoint);
+  url.hash = "";
+  return url;
+}
+
+function buildCompatibleUrl(endpoint: string, targetPath: string) {
+  const url = normalizeEndpointUrl(endpoint);
+  const [pathPart, queryString = ""] = targetPath.split("?");
+  const currentPath = url.pathname.replace(/^\/+|\/+$/g, "");
+  const matchedPath = REPLACEABLE_API_PATHS.find((candidate) =>
+    currentPath.toLowerCase().endsWith(candidate.toLowerCase()),
+  );
+
+  url.search = "";
+
+  if (matchedPath) {
+    const prefix = currentPath
+      .slice(0, currentPath.length - matchedPath.length)
+      .replace(/\/+$/g, "");
+    url.pathname = `/${[prefix, pathPart].filter(Boolean).join("/")}`;
+  } else if (currentPath.endsWith("v1") && pathPart.startsWith("v1/")) {
+    url.pathname = `/${[currentPath, pathPart.slice(3)].join("/")}`;
+  } else {
+    url.pathname = `/${[currentPath, pathPart].filter(Boolean).join("/")}`;
+  }
+
+  const params = new URLSearchParams(queryString);
+  const search = params.toString();
+  url.search = search ? `?${search}` : "";
+
+  return url.toString();
+}
+
+function buildAzureUrl(
+  endpoint: string,
+  deploymentName: string,
+  requestFormat: RequestFormat,
+  apiVersion: string,
+) {
+  const path =
+    requestFormat === RequestFormat.OpenAIImage
+      ? Azure.ImagePath(deploymentName, apiVersion || "2023-08-01-preview")
+      : Azure.ChatPath(deploymentName, apiVersion || "2023-08-01-preview");
+  const url = normalizeEndpointUrl(endpoint);
+  const [pathPart, queryString = ""] = path.split("?");
+  const cleanedPath = url.pathname
+    .replace(/\/+$/g, "")
+    .replace(
+      /\/deployments\/[^/]+\/(?:chat\/completions|images\/generations)$/i,
+      "",
+    );
+
+  url.pathname = `/${[cleanedPath.replace(/^\/+/g, ""), pathPart]
+    .filter(Boolean)
+    .join("/")}`;
+  const params = new URLSearchParams(queryString);
+  const search = params.toString();
+  url.search = search ? `?${search}` : "";
+
+  return url.toString();
+}
+
+function buildGeminiUrl(
+  endpoint: string,
+  modelName: string,
+  apiVersion: string,
+) {
+  const url = normalizeEndpointUrl(endpoint);
+  const version = (apiVersion || "v1beta").replace(/^\/+|\/+$/g, "");
+  const currentPath = url.pathname
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/\/models.*$/i, "");
+
+  url.search = "";
+
+  if (currentPath.endsWith(version)) {
+    url.pathname = `/${[currentPath, `models/${modelName}:generateContent`]
+      .filter(Boolean)
+      .join("/")}`;
+  } else {
+    url.pathname = `/${[
+      currentPath,
+      version,
+      `models/${modelName}:generateContent`,
+    ]
+      .filter(Boolean)
+      .join("/")}`;
+  }
+
+  return url.toString();
+}
+
+function buildTestRequestUrl(
+  endpoint: string,
+  requestFormat: RequestFormat,
+  provider: ServiceProvider,
+  model: ModelManagerOption,
+  versions: {
+    azureApiVersion?: string;
+    googleApiVersion?: string;
+  },
+) {
+  if (provider === ServiceProvider.Azure) {
+    return buildAzureUrl(
+      endpoint,
+      model.displayName || model.name,
+      requestFormat,
+      versions.azureApiVersion || "2023-08-01-preview",
+    );
+  }
+
+  if (requestFormat === RequestFormat.Gemini) {
+    return buildGeminiUrl(
+      endpoint,
+      model.name,
+      versions.googleApiVersion || "v1beta",
+    );
+  }
+
+  if (requestFormat === RequestFormat.Anthropic) {
+    return buildCompatibleUrl(endpoint, Anthropic.ChatPath);
+  }
+
+  if (requestFormat === RequestFormat.OpenAIResponses) {
+    return buildCompatibleUrl(endpoint, OpenaiPath.ResponsesPath);
+  }
+
+  if (requestFormat === RequestFormat.OpenAIImage) {
+    if (provider === ServiceProvider.ChatGLM) {
+      return buildCompatibleUrl(endpoint, ChatGLM.ImagePath);
+    }
+    return buildCompatibleUrl(endpoint, OpenaiPath.ImagePath);
+  }
+
+  if (requestFormat === RequestFormat.OpenAIGPTImage) {
+    return buildCompatibleUrl(endpoint, OpenaiPath.ImagePath);
+  }
+
+  if (provider === ServiceProvider.ByteDance) {
+    return buildCompatibleUrl(endpoint, ByteDance.ChatPath);
+  }
+  if (provider === ServiceProvider.Alibaba) {
+    return buildCompatibleUrl(endpoint, Alibaba.ChatPath(model.name));
+  }
+  if (provider === ServiceProvider.Moonshot) {
+    return buildCompatibleUrl(endpoint, Moonshot.ChatPath);
+  }
+  if (provider === ServiceProvider.DeepSeek) {
+    return buildCompatibleUrl(endpoint, DeepSeek.ChatPath);
+  }
+  if (provider === ServiceProvider.XAI) {
+    return buildCompatibleUrl(endpoint, XAI.ChatPath);
+  }
+  if (provider === ServiceProvider.ChatGLM) {
+    return buildCompatibleUrl(endpoint, ChatGLM.ChatPath);
+  }
+  if (provider === ServiceProvider.SiliconFlow) {
+    return buildCompatibleUrl(endpoint, SiliconFlow.ChatPath);
+  }
+
+  return buildCompatibleUrl(endpoint, OpenaiPath.ChatPath);
+}
+
+function getTestRequestHeaders(params: {
+  requestFormat: RequestFormat;
+  provider: ServiceProvider;
+  apiKey: string;
+  anthropicApiVersion?: string;
+}) {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  const apiKey = params.apiKey.trim();
+
+  if (params.provider === ServiceProvider.Azure) {
+    headers["api-key"] = apiKey;
+    return headers;
+  }
+
+  if (params.requestFormat === RequestFormat.Anthropic) {
+    headers["x-api-key"] = apiKey;
+    headers["anthropic-version"] = params.anthropicApiVersion || "2023-06-01";
+    return headers;
+  }
+
+  if (params.requestFormat === RequestFormat.Gemini) {
+    headers["x-goog-api-key"] = apiKey;
+    return headers;
+  }
+
+  headers.Authorization = `Bearer ${apiKey}`;
+  return headers;
+}
+
+function buildTestRequestBody(
+  model: ModelManagerOption,
+  requestFormat: RequestFormat,
+) {
+  switch (requestFormat) {
+    case RequestFormat.OpenAIResponses:
+      return {
+        model: model.name,
+        input: [
+          {
+            role: "user",
+            content: "hi",
+          },
+        ],
+        stream: false,
+        max_output_tokens: 16,
+      };
+    case RequestFormat.OpenAIImage:
+      return {
+        model: model.name,
+        prompt: "hi",
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
+        style: "vivid",
+      };
+    case RequestFormat.OpenAIGPTImage:
+      return {
+        model: model.name,
+        prompt: "hi",
+        n: 1,
+        size: "auto",
+        quality: "auto",
+        background: "auto",
+        output_format: "png",
+        moderation: "auto",
+      };
+    case RequestFormat.Anthropic:
+      return {
+        model: model.name,
+        max_tokens: 16,
+        messages: [
+          {
+            role: "user",
+            content: "hi",
+          },
+        ],
+      };
+    case RequestFormat.Gemini:
+      return {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: "hi" }],
+          },
+        ],
+      };
+    default:
+      return {
+        model: model.name,
+        stream: false,
+        max_tokens: 16,
+        messages: [
+          {
+            role: "user",
+            content: "hi",
+          },
+        ],
+      };
+  }
+}
+
+function supportsModelTest(
+  provider: ServiceProvider,
+  requestFormat: RequestFormat,
+) {
+  if (requestFormat === RequestFormat.Gemini) return true;
+  if (requestFormat === RequestFormat.Anthropic) return true;
+  if (UNSUPPORTED_TEST_PROVIDERS.has(provider)) return false;
+  return OPENAI_STYLE_PROVIDERS.has(provider);
+}
+
+async function fetchWithProxyFallback(requestUrl: string, init: RequestInit) {
+  try {
+    return await fetch(requestUrl, init);
+  } catch (error) {
+    if (getClientConfig()?.buildMode === "export") {
+      throw error;
+    }
+
+    const targetUrl = new URL(requestUrl);
+    const proxyUrl = new URL(
+      `/api/proxy/${targetUrl.pathname.replace(/^\/+/g, "")}`,
+      window.location.origin,
+    );
+    targetUrl.searchParams.forEach((value, key) =>
+      proxyUrl.searchParams.append(key, value),
+    );
+
+    const headers = new Headers(init.headers);
+    headers.set("X-Base-URL", targetUrl.origin);
+
+    return fetch(proxyUrl.toString(), {
+      ...init,
+      headers,
+    });
+  }
+}
+
+function formatTestDuration(durationMs: number) {
+  return `${(durationMs / 1000).toFixed(2)}s`;
+}
+
 function extractRemoteModelEntries(payload: unknown): RemoteModelEntry[] {
   const payloadRecord =
     typeof payload === "object" && payload !== null
@@ -235,6 +609,38 @@ function buildModelManagerOptions(
   });
 }
 
+function mergeDraftModelOptions(
+  options: ModelManagerOption[],
+  draftCustomModels: string[],
+) {
+  const merged = new Map(options.map((option) => [option.name, option]));
+
+  draftCustomModels.forEach((name, index) => {
+    if (merged.has(name)) return;
+
+    merged.set(name, {
+      name,
+      displayName: name,
+      available: true,
+      inCatalog: false,
+      providerLabel: inferProviderLabel(name),
+      sorted: 20000 + index,
+    });
+  });
+
+  return Array.from(merged.values()).sort((a, b) => {
+    if (a.sorted !== b.sorted) return a.sorted - b.sorted;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function parseManualModelNames(value: string) {
+  return value
+    .split(/[\n,，]+/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+}
+
 function buildCustomModelsValue(
   options: ModelManagerOption[],
   selectedNames: Set<string>,
@@ -276,15 +682,26 @@ export function CustomModelManager(props: {
   defaultModel: string;
   endpoint: string;
   apiKey: string;
+  provider: ServiceProvider;
+  requestFormat: RequestFormat;
+  azureApiVersion?: string;
+  googleApiVersion?: string;
+  anthropicApiVersion?: string;
   onChangeCustomModels: (customModels: string) => void;
   onMergeModels: (models: LLMModel[]) => void;
 }) {
   const [showModal, setShowModal] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [testingAll, setTestingAll] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "enabled" | "disabled">("all");
+  const [manualModelInput, setManualModelInput] = useState("");
+  const [draftCustomModels, setDraftCustomModels] = useState<string[]>([]);
+  const [testStates, setTestStates] = useState<Record<string, ModelTestState>>(
+    {},
+  );
 
-  const options = useMemo(
+  const baseOptions = useMemo(
     () =>
       buildModelManagerOptions(
         props.models,
@@ -294,19 +711,47 @@ export function CustomModelManager(props: {
     [props.customModels, props.defaultModel, props.models],
   );
 
+  const options = useMemo(
+    () => mergeDraftModelOptions(baseOptions, draftCustomModels),
+    [baseOptions, draftCustomModels],
+  );
+
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+  const previousOptionNamesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    setSelectedNames(
-      new Set(
-        options.filter((model) => model.available).map((model) => model.name),
-      ),
-    );
+    if (!showModal) {
+      previousOptionNamesRef.current = new Set();
+      return;
+    }
+
+    const currentOptionNames = new Set(options.map((model) => model.name));
+
+    setSelectedNames((prev) => {
+      const next = new Set(
+        Array.from(prev).filter((modelName) =>
+          currentOptionNames.has(modelName),
+        ),
+      );
+
+      options.forEach((model) => {
+        if (
+          !previousOptionNamesRef.current.has(model.name) &&
+          model.available
+        ) {
+          next.add(model.name);
+        }
+      });
+
+      return next;
+    });
+
+    previousOptionNamesRef.current = currentOptionNames;
   }, [options, showModal]);
 
   const selectedModels = useMemo(
-    () => options.filter((model) => selectedNames.has(model.name)),
-    [options, selectedNames],
+    () => baseOptions.filter((model) => model.available),
+    [baseOptions],
   );
 
   const filteredModels = useMemo(() => {
@@ -324,12 +769,41 @@ export function CustomModelManager(props: {
       return true;
     });
   }, [filter, options, search, selectedNames]);
+  const canTestModels = supportsModelTest(props.provider, props.requestFormat);
 
   const selectedSummary = selectedModels.slice(0, 12);
   const hiddenCount = Math.max(
     0,
     selectedModels.length - selectedSummary.length,
   );
+
+  const openManager = () => {
+    const initialSelectedNames = new Set(
+      baseOptions.filter((model) => model.available).map((model) => model.name),
+    );
+
+    setSelectedNames(initialSelectedNames);
+    setSearch("");
+    setFilter("all");
+    setManualModelInput("");
+    setDraftCustomModels([]);
+    setTestStates({});
+    setTestingAll(false);
+    previousOptionNamesRef.current = new Set(
+      baseOptions.map((model) => model.name),
+    );
+    setShowModal(true);
+  };
+
+  const closeManager = () => {
+    setShowModal(false);
+    setSearch("");
+    setFilter("all");
+    setManualModelInput("");
+    setDraftCustomModels([]);
+    setTestStates({});
+    setTestingAll(false);
+  };
 
   const toggleModel = (modelName: string) => {
     setSelectedNames((prev) => {
@@ -343,8 +817,46 @@ export function CustomModelManager(props: {
     });
   };
 
+  const addManualModels = () => {
+    const nextNames = parseManualModelNames(manualModelInput);
+
+    if (nextNames.length === 0) {
+      showToast(Locale.Settings.Access.CustomModel.Modal.AddEmpty);
+      return;
+    }
+
+    const existingNames = new Set(
+      options.map((model) => model.name.toLowerCase()),
+    );
+    const queuedNames = new Set<string>();
+    const modelsToAdd: string[] = [];
+
+    nextNames.forEach((name) => {
+      const normalized = name.toLowerCase();
+      if (existingNames.has(normalized) || queuedNames.has(normalized)) return;
+      queuedNames.add(normalized);
+      modelsToAdd.push(name);
+    });
+
+    if (modelsToAdd.length === 0) {
+      showToast(Locale.Settings.Access.CustomModel.Modal.AddExists);
+      return;
+    }
+
+    setDraftCustomModels((prev) => [...prev, ...modelsToAdd]);
+    setSelectedNames((prev) => {
+      const next = new Set(prev);
+      modelsToAdd.forEach((name) => next.add(name));
+      return next;
+    });
+    setManualModelInput("");
+    showToast(
+      Locale.Settings.Access.CustomModel.Modal.AddSuccess(modelsToAdd.length),
+    );
+  };
+
   const loadModels = async () => {
-    if (!props.apiKey.trim()) {
+    if (!props.apiKey.trim() || !props.endpoint.trim()) {
       showToast(Locale.Settings.Access.CustomModel.MissingConfig);
       return;
     }
@@ -352,12 +864,16 @@ export function CustomModelManager(props: {
     setLoadingModels(true);
     try {
       const modelsUrl = buildModelsUrl(props.endpoint);
-      const res = await fetch(modelsUrl, {
+      const headers = getTestRequestHeaders({
+        requestFormat: props.requestFormat,
+        provider: props.provider,
+        apiKey: props.apiKey,
+        anthropicApiVersion: props.anthropicApiVersion,
+      });
+      delete headers["Content-Type"];
+      const res = await fetchWithProxyFallback(modelsUrl, {
         method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${props.apiKey.trim()}`,
-        },
+        headers,
       });
 
       if (!res.ok) {
@@ -394,6 +910,139 @@ export function CustomModelManager(props: {
     }
   };
 
+  const testModel = async (model: ModelManagerOption) => {
+    if (!props.apiKey.trim() || !props.endpoint.trim()) {
+      showToast(Locale.Settings.Access.CustomModel.MissingConfig);
+      return false;
+    }
+
+    if (!canTestModels) {
+      showToast(Locale.Settings.Access.CustomModel.Modal.TestUnsupported);
+      return false;
+    }
+
+    const startAt = performance.now();
+    setTestStates((prev) => ({
+      ...prev,
+      [model.name]: {
+        status: "testing",
+      },
+    }));
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(
+      () => controller.abort(),
+      MODEL_TEST_TIMEOUT_MS,
+    );
+
+    try {
+      const requestUrl = buildTestRequestUrl(
+        props.endpoint,
+        props.requestFormat,
+        props.provider,
+        model,
+        {
+          azureApiVersion: props.azureApiVersion,
+          googleApiVersion: props.googleApiVersion,
+        },
+      );
+      const headers = getTestRequestHeaders({
+        requestFormat: props.requestFormat,
+        provider: props.provider,
+        apiKey: props.apiKey,
+        anthropicApiVersion: props.anthropicApiVersion,
+      });
+      const response = await fetchWithProxyFallback(requestUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(buildTestRequestBody(model, props.requestFormat)),
+        signal: controller.signal,
+      });
+      const durationMs = performance.now() - startAt;
+
+      if (response.status !== 200) {
+        const errorText = await response.text();
+        setTestStates((prev) => ({
+          ...prev,
+          [model.name]: {
+            status: "failed",
+            code: response.status,
+            durationMs,
+            message: errorText.slice(0, 200),
+          },
+        }));
+        return false;
+      }
+
+      setTestStates((prev) => ({
+        ...prev,
+        [model.name]: {
+          status: "success",
+          code: response.status,
+          durationMs,
+        },
+      }));
+      return true;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? Locale.Settings.Access.CustomModel.Modal.TestTimeout
+            : error.message
+          : Locale.Settings.Access.CustomModel.Modal.TestFailed;
+
+      setTestStates((prev) => ({
+        ...prev,
+        [model.name]: {
+          status: "failed",
+          message,
+        },
+      }));
+      return false;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
+
+  const testAllModels = async () => {
+    if (!props.apiKey.trim() || !props.endpoint.trim()) {
+      showToast(Locale.Settings.Access.CustomModel.MissingConfig);
+      return;
+    }
+
+    if (!canTestModels) {
+      showToast(Locale.Settings.Access.CustomModel.Modal.TestUnsupported);
+      return;
+    }
+
+    const targets = filteredModels;
+    if (targets.length === 0) {
+      showToast(Locale.Settings.Access.CustomModel.Modal.Empty);
+      return;
+    }
+
+    setTestingAll(true);
+    let successCount = 0;
+
+    try {
+      for (const model of targets) {
+        const isSuccess = await testModel(model);
+        if (isSuccess) {
+          successCount += 1;
+        }
+      }
+
+      showToast(
+        Locale.Settings.Access.CustomModel.Modal.TestAllSummary(
+          successCount,
+          targets.length,
+        ),
+      );
+    } finally {
+      setTestingAll(false);
+    }
+  };
+
   return (
     <>
       <div className={styles["custom-model-summary"]}>
@@ -419,7 +1068,7 @@ export function CustomModelManager(props: {
               icon={<EditIcon />}
               text={Locale.Settings.Access.CustomModel.Manage}
               bordered
-              onClick={() => setShowModal(true)}
+              onClick={openManager}
             />
           </div>
         </div>
@@ -447,8 +1096,7 @@ export function CustomModelManager(props: {
         <div className="modal-mask">
           <Modal
             title={Locale.Settings.Access.CustomModel.Modal.Title}
-            defaultMax
-            onClose={() => setShowModal(false)}
+            onClose={closeManager}
             actions={[
               <IconButton
                 key="reload"
@@ -461,11 +1109,32 @@ export function CustomModelManager(props: {
                 bordered
                 onClick={loadModels}
               />,
+              <div key="timeout" className={styles["manager-timeout"]}>
+                {Locale.Settings.Access.CustomModel.Modal.TestTimeoutHint(
+                  MODEL_TEST_TIMEOUT_MS / 1000,
+                )}
+              </div>,
+              <IconButton
+                key="test-all"
+                text={
+                  testingAll
+                    ? Locale.Settings.Access.CustomModel.Modal.TestingAll
+                    : Locale.Settings.Access.CustomModel.Modal.TestAll
+                }
+                bordered
+                disabled={
+                  !canTestModels ||
+                  testingAll ||
+                  loadingModels ||
+                  filteredModels.length === 0
+                }
+                onClick={() => void testAllModels()}
+              />,
               <IconButton
                 key="cancel"
                 text={Locale.UI.Cancel}
                 bordered
-                onClick={() => setShowModal(false)}
+                onClick={closeManager}
               />,
               <IconButton
                 key="confirm"
@@ -476,13 +1145,34 @@ export function CustomModelManager(props: {
                   props.onChangeCustomModels(
                     buildCustomModelsValue(options, selectedNames),
                   );
-                  setShowModal(false);
+                  closeManager();
                 }}
               />,
             ]}
           >
             <div className={styles["manager-body"]}>
               <div className={styles["manager-toolbar"]}>
+                <div className={styles["manager-add-row"]}>
+                  <input
+                    className={styles["manager-add-input"]}
+                    value={manualModelInput}
+                    placeholder={
+                      Locale.Settings.Access.CustomModel.Modal.AddPlaceholder
+                    }
+                    onChange={(e) => setManualModelInput(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addManualModels();
+                      }
+                    }}
+                  />
+                  <IconButton
+                    text={Locale.Settings.Access.CustomModel.Modal.Add}
+                    bordered
+                    onClick={addManualModels}
+                  />
+                </div>
                 <input
                   className={styles["manager-search"]}
                   value={search}
@@ -531,46 +1221,95 @@ export function CustomModelManager(props: {
                     {Locale.Settings.Access.CustomModel.Modal.Empty}
                   </div>
                 ) : (
-                  filteredModels.map((model) => (
-                    <div
-                      key={model.name}
-                      className={styles["manager-item"]}
-                      onClick={() => toggleModel(model.name)}
-                    >
-                      <div className={styles["manager-item-main"]}>
-                        <Avatar model={model.name as any} />
-                        <div className={styles["manager-item-content"]}>
-                          <div className={styles["manager-item-title"]}>
-                            {model.displayName}
-                          </div>
-                          <div className={styles["manager-item-meta"]}>
-                            <span className={styles["manager-item-tag"]}>
-                              {model.providerLabel}
-                            </span>
-                            {!model.inCatalog && (
+                  filteredModels.map((model) => {
+                    const testState = testStates[model.name];
+
+                    return (
+                      <div
+                        key={model.name}
+                        className={styles["manager-item"]}
+                        onClick={() => toggleModel(model.name)}
+                      >
+                        <div className={styles["manager-item-main"]}>
+                          <Avatar model={model.name as any} />
+                          <div className={styles["manager-item-content"]}>
+                            <div className={styles["manager-item-title"]}>
+                              {model.displayName}
+                            </div>
+                            <div className={styles["manager-item-meta"]}>
                               <span className={styles["manager-item-tag"]}>
-                                {
-                                  Locale.Settings.Access.CustomModel.Modal
-                                    .CustomOnly
-                                }
+                                {model.providerLabel}
                               </span>
-                            )}
-                            {model.isDefault && (
-                              <span className={styles["manager-item-tag"]}>
-                                Default
-                              </span>
-                            )}
+                              {!model.inCatalog && (
+                                <span className={styles["manager-item-tag"]}>
+                                  {
+                                    Locale.Settings.Access.CustomModel.Modal
+                                      .CustomOnly
+                                  }
+                                </span>
+                              )}
+                              {model.isDefault && (
+                                <span className={styles["manager-item-tag"]}>
+                                  Default
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <div
+                          className={styles["manager-item-actions"]}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {testState?.status === "success" && (
+                            <span
+                              className={styles["manager-item-test-success"]}
+                            >
+                              {Locale.Settings.Access.CustomModel.Modal.TestSuccess(
+                                testState.code ?? 200,
+                                formatTestDuration(testState.durationMs ?? 0),
+                              )}
+                            </span>
+                          )}
+                          {testState?.status === "failed" && (
+                            <span
+                              className={styles["manager-item-test-failed"]}
+                              title={testState.message}
+                            >
+                              {testState.code
+                                ? Locale.Settings.Access.CustomModel.Modal.TestFailedWithCode(
+                                    testState.code,
+                                  )
+                                : testState.message ||
+                                  Locale.Settings.Access.CustomModel.Modal
+                                    .TestFailed}
+                            </span>
+                          )}
+                          <IconButton
+                            text={
+                              testState?.status === "testing"
+                                ? Locale.Settings.Access.CustomModel.Modal
+                                    .Testing
+                                : Locale.Settings.Access.CustomModel.Modal.Test
+                            }
+                            bordered
+                            disabled={
+                              !canTestModels ||
+                              loadingModels ||
+                              testingAll ||
+                              testState?.status === "testing"
+                            }
+                            onClick={() => void testModel(model)}
+                          />
+                          <input
+                            type="checkbox"
+                            checked={selectedNames.has(model.name)}
+                            onChange={() => toggleModel(model.name)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
                       </div>
-                      <input
-                        type="checkbox"
-                        checked={selectedNames.has(model.name)}
-                        onChange={() => toggleModel(model.name)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
