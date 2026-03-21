@@ -24,8 +24,71 @@ import Locale from "../locales";
 import { InputRange } from "./input-range";
 import { ListItem, SearchSelect, Select } from "./ui-lib";
 import { useAllModels } from "../utils/hooks";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./model-config.module.scss";
+
+function OptionalNumberInput(props: {
+  ariaLabel: string;
+  value?: number;
+  min: number;
+  max: number;
+  step?: number | string;
+  placeholder: string;
+  validator: (value: number) => number;
+  onValueChange: (value: number | undefined) => void;
+}) {
+  const [draftValue, setDraftValue] = useState(
+    props.value === undefined ? "" : String(props.value),
+  );
+
+  useEffect(() => {
+    setDraftValue(props.value === undefined ? "" : String(props.value));
+  }, [props.value]);
+
+  const commitValue = (rawValue: string) => {
+    if (!rawValue.trim()) {
+      setDraftValue("");
+      props.onValueChange(undefined);
+      return;
+    }
+
+    const parsedValue = Number(rawValue);
+    if (!Number.isFinite(parsedValue)) {
+      setDraftValue(props.value === undefined ? "" : String(props.value));
+      return;
+    }
+
+    const nextValue = props.validator(parsedValue);
+    setDraftValue(String(nextValue));
+    props.onValueChange(nextValue);
+  };
+
+  return (
+    <input
+      aria-label={props.ariaLabel}
+      type="number"
+      min={props.min}
+      max={props.max}
+      step={props.step}
+      placeholder={props.placeholder}
+      value={draftValue}
+      onChange={(e) => {
+        const rawValue = e.currentTarget.value;
+        setDraftValue(rawValue);
+
+        if (!rawValue) {
+          props.onValueChange(undefined);
+          return;
+        }
+
+        if (Number.isFinite(e.currentTarget.valueAsNumber)) {
+          props.onValueChange(props.validator(e.currentTarget.valueAsNumber));
+        }
+      }}
+      onBlur={(e) => commitValue(e.currentTarget.value)}
+    ></input>
+  );
+}
 
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
@@ -331,24 +394,20 @@ export function ModelConfigList(props: {
             title={Locale.Settings.ImageOutputCompression.Title}
             subTitle={Locale.Settings.ImageOutputCompression.SubTitle}
           >
-            <input
-              aria-label={Locale.Settings.ImageOutputCompression.Title}
-              type="number"
+            <OptionalNumberInput
+              ariaLabel={Locale.Settings.ImageOutputCompression.Title}
+              value={props.modelConfig.gptImageOutputCompression}
               min={0}
               max={100}
-              step="10"
+              step={10}
               placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
-              value={props.modelConfig.gptImageOutputCompression ?? ""}
-              onChange={(e) =>
-                props.updateConfig((config) => {
-                  config.gptImageOutputCompression = e.currentTarget.value
-                    ? ModalConfigValidator.gptImageOutputCompression(
-                        e.currentTarget.valueAsNumber,
-                      )
-                    : undefined;
-                })
+              validator={ModalConfigValidator.gptImageOutputCompression}
+              onValueChange={(value) =>
+                props.updateConfig(
+                  (config) => (config.gptImageOutputCompression = value),
+                )
               }
-            ></input>
+            ></OptionalNumberInput>
           </ListItem>
 
           <ListItem
@@ -408,67 +467,51 @@ export function ModelConfigList(props: {
             title={Locale.Settings.Temperature.Title}
             subTitle={Locale.Settings.Temperature.SubTitle}
           >
-            <input
-              aria-label={Locale.Settings.Temperature.Title}
-              type="number"
+            <OptionalNumberInput
+              ariaLabel={Locale.Settings.Temperature.Title}
+              value={props.modelConfig.temperature}
               min={0}
               max={1}
-              step="0.1"
+              step={0.1}
               placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
-              value={props.modelConfig.temperature ?? ""}
-              onChange={(e) =>
-                props.updateConfig((config) => {
-                  config.temperature = e.currentTarget.value
-                    ? ModalConfigValidator.temperature(
-                        e.currentTarget.valueAsNumber,
-                      )
-                    : undefined;
-                })
+              validator={ModalConfigValidator.temperature}
+              onValueChange={(value) =>
+                props.updateConfig((config) => (config.temperature = value))
               }
-            ></input>
+            ></OptionalNumberInput>
           </ListItem>
           <ListItem
             title={Locale.Settings.TopP.Title}
             subTitle={Locale.Settings.TopP.SubTitle}
           >
-            <input
-              aria-label={Locale.Settings.TopP.Title}
-              type="number"
+            <OptionalNumberInput
+              ariaLabel={Locale.Settings.TopP.Title}
+              value={props.modelConfig.top_p}
               min={0}
               max={1}
-              step="0.1"
+              step={0.1}
               placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
-              value={props.modelConfig.top_p ?? ""}
-              onChange={(e) =>
-                props.updateConfig((config) => {
-                  config.top_p = e.currentTarget.value
-                    ? ModalConfigValidator.top_p(e.currentTarget.valueAsNumber)
-                    : undefined;
-                })
+              validator={ModalConfigValidator.top_p}
+              onValueChange={(value) =>
+                props.updateConfig((config) => (config.top_p = value))
               }
-            ></input>
+            ></OptionalNumberInput>
           </ListItem>
           <ListItem
             title={Locale.Settings.MaxTokens.Title}
             subTitle={Locale.Settings.MaxTokens.SubTitle}
           >
-            <input
-              aria-label={Locale.Settings.MaxTokens.Title}
-              type="number"
+            <OptionalNumberInput
+              ariaLabel={Locale.Settings.MaxTokens.Title}
+              value={props.modelConfig.max_tokens}
               min={1024}
               max={512000}
               placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
-              value={props.modelConfig.max_tokens ?? ""}
-              onChange={(e) =>
-                props.updateConfig((config) => {
-                  config.max_tokens = e.currentTarget.value
-                    ? ModalConfigValidator.max_tokens(
-                        e.currentTarget.valueAsNumber,
-                      )
-                    : undefined;
-                })
+              validator={ModalConfigValidator.max_tokens}
+              onValueChange={(value) =>
+                props.updateConfig((config) => (config.max_tokens = value))
               }
-            ></input>
+            ></OptionalNumberInput>
           </ListItem>
 
           {props.modelConfig?.providerName == ServiceProvider.Google ? null : (
@@ -477,44 +520,40 @@ export function ModelConfigList(props: {
                 title={Locale.Settings.PresencePenalty.Title}
                 subTitle={Locale.Settings.PresencePenalty.SubTitle}
               >
-                <InputRange
-                  aria={Locale.Settings.PresencePenalty.Title}
-                  value={props.modelConfig.presence_penalty?.toFixed(1)}
-                  min="-2"
-                  max="2"
-                  step="0.1"
-                  onChange={(e) => {
+                <OptionalNumberInput
+                  ariaLabel={Locale.Settings.PresencePenalty.Title}
+                  value={props.modelConfig.presence_penalty}
+                  min={-2}
+                  max={2}
+                  step={0.1}
+                  placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+                  validator={ModalConfigValidator.presence_penalty}
+                  onValueChange={(value) =>
                     props.updateConfig(
-                      (config) =>
-                        (config.presence_penalty =
-                          ModalConfigValidator.presence_penalty(
-                            e.currentTarget.valueAsNumber,
-                          )),
-                    );
-                  }}
-                ></InputRange>
+                      (config) => (config.presence_penalty = value),
+                    )
+                  }
+                ></OptionalNumberInput>
               </ListItem>
 
               <ListItem
                 title={Locale.Settings.FrequencyPenalty.Title}
                 subTitle={Locale.Settings.FrequencyPenalty.SubTitle}
               >
-                <InputRange
-                  aria={Locale.Settings.FrequencyPenalty.Title}
-                  value={props.modelConfig.frequency_penalty?.toFixed(1)}
-                  min="-2"
-                  max="2"
-                  step="0.1"
-                  onChange={(e) => {
+                <OptionalNumberInput
+                  ariaLabel={Locale.Settings.FrequencyPenalty.Title}
+                  value={props.modelConfig.frequency_penalty}
+                  min={-2}
+                  max={2}
+                  step={0.1}
+                  placeholder={Locale.Settings.OptionalParam.EmptyPlaceholder}
+                  validator={ModalConfigValidator.frequency_penalty}
+                  onValueChange={(value) =>
                     props.updateConfig(
-                      (config) =>
-                        (config.frequency_penalty =
-                          ModalConfigValidator.frequency_penalty(
-                            e.currentTarget.valueAsNumber,
-                          )),
-                    );
-                  }}
-                ></InputRange>
+                      (config) => (config.frequency_penalty = value),
+                    )
+                  }
+                ></OptionalNumberInput>
               </ListItem>
 
               <ListItem

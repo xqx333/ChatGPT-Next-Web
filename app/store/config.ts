@@ -192,8 +192,8 @@ export const DEFAULT_CONFIG = {
     temperature: undefined as number | undefined,
     top_p: undefined as number | undefined,
     max_tokens: undefined as number | undefined,
-    presence_penalty: 0,
-    frequency_penalty: 0,
+    presence_penalty: undefined as number | undefined,
+    frequency_penalty: undefined as number | undefined,
     sendMemory: true,
     historyMessageCount: 4,
     compressMessageLengthThreshold: 1000,
@@ -349,7 +349,7 @@ export const useAppConfig = createPersistStore(
   }),
   {
     name: StoreKey.Config,
-    version: 4.6,
+    version: 4.7,
 
     merge(persistedState, currentState) {
       const state = persistedState as ChatConfig | undefined;
@@ -381,7 +381,6 @@ export const useAppConfig = createPersistStore(
         state.modelConfig.sendMemory = true;
         state.modelConfig.historyMessageCount = 4;
         state.modelConfig.compressMessageLengthThreshold = 1000;
-        state.modelConfig.frequency_penalty = 0;
         state.modelConfig.top_p = 1;
         state.modelConfig.template = DEFAULT_INPUT_TEMPLATE;
         state.dontShowMaskSplashScreen = false;

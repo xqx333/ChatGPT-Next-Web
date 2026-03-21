@@ -182,44 +182,6 @@ export const useAccessStore = createPersistStore(
       return ensure(get(), ["anthropicApiKey"]);
     },
 
-    isValidBaidu() {
-      return ensure(get(), ["baiduApiKey", "baiduSecretKey"]);
-    },
-
-    isValidByteDance() {
-      return ensure(get(), ["bytedanceApiKey"]);
-    },
-
-    isValidAlibaba() {
-      return ensure(get(), ["alibabaApiKey"]);
-    },
-
-    isValidTencent() {
-      return ensure(get(), ["tencentSecretKey", "tencentSecretId"]);
-    },
-
-    isValidMoonshot() {
-      return ensure(get(), ["moonshotApiKey"]);
-    },
-    isValidIflytek() {
-      return ensure(get(), ["iflytekApiKey"]);
-    },
-    isValidDeepSeek() {
-      return ensure(get(), ["deepseekApiKey"]);
-    },
-
-    isValidXAI() {
-      return ensure(get(), ["xaiApiKey"]);
-    },
-
-    isValidChatGLM() {
-      return ensure(get(), ["chatglmApiKey"]);
-    },
-
-    isValidSiliconFlow() {
-      return ensure(get(), ["siliconflowApiKey"]);
-    },
-
     isAuthorized() {
       this.fetch();
 
@@ -229,16 +191,6 @@ export const useAccessStore = createPersistStore(
         this.isValidAzure() ||
         this.isValidGoogle() ||
         this.isValidAnthropic() ||
-        this.isValidBaidu() ||
-        this.isValidByteDance() ||
-        this.isValidAlibaba() ||
-        this.isValidTencent() ||
-        this.isValidMoonshot() ||
-        this.isValidIflytek() ||
-        this.isValidDeepSeek() ||
-        this.isValidXAI() ||
-        this.isValidChatGLM() ||
-        this.isValidSiliconFlow() ||
         !this.enabledAccessControl() ||
         (this.enabledAccessControl() && ensure(get(), ["accessCode"]))
       );
